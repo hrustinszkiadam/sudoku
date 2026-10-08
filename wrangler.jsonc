@@ -1,0 +1,43 @@
+// wrangler.jsonc. The Vite plugin supplies assets.directory.
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "sudoku",
+	"main": "src/worker/index.ts",
+	"compatibility_date": "2026-10-06",
+	"assets": {
+		"not_found_handling": "single-page-application",
+		"run_worker_first": ["/api/*"]
+	},
+	"durable_objects": {
+		"bindings": [{ "name": "GAME_ROOM", "class_name": "GameRoom" }]
+	},
+	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["GameRoom"] }],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "sudoku",
+			"database_id": "57451f84-2a32-499f-abaf-a30e5f45d3f1",
+			"migrations_dir": "migrations"
+		}
+	],
+	"ratelimits": [
+		{
+			// Room creation, keyed by user id.
+			"name": "ROOM_CREATE_LIMITER",
+			"namespace_id": "4101",
+			"simple": { "limit": 10, "period": 60 }
+		},
+		{
+			// Guest session creation, keyed by client IP.
+			"name": "SESSION_CREATE_LIMITER",
+			"namespace_id": "4102",
+			"simple": { "limit": 20, "period": 60 }
+		}
+	],
+	"vars": {
+		// Public Turnstile site key. Overridden by .dev.vars locally.
+		"TURNSTILE_SITE_KEY": "1x00000000000000000000AA"
+	},
+	"triggers": { "crons": ["5 0 * * *"] },
+	"observability": { "enabled": true }
+}

@@ -1,0 +1,12 @@
+{
+	// src/shared must stay runtime-agnostic: no DOM, Node or Workers types.
+	"extends": "./tsconfig.base.json",
+	"compilerOptions": {
+		"composite": true,
+		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.shared.tsbuildinfo",
+		"lib": ["ES2023"],
+		"types": []
+	},
+	"include": ["src/shared"],
+	"exclude": ["src/shared/**/*.test.ts"]
+}
