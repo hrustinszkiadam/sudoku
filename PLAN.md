@@ -379,10 +379,10 @@ All messages are JSON objects with a `type` field, defined as Zod discriminated 
 **Accept:** `pnpm dev` serves the app and `/api/health` from one origin. All test commands run. The first deploy succeeds. _(Deploy pending: blocked for the agent, run `pnpm run deploy` manually.)_
 
 ### Phase 1: Core, puzzles, board UI
-- [ ] Shared sudoku core with full unit tests
-- [ ] Puzzle generator and seeds; D1 schema and migrations
-- [ ] Guest sessions (`/api/session`)
-- [ ] Board, NumberPad and keyboard handling on `/dev/board`, driven by a local in-memory engine (conflict checking only)
+- [x] Shared sudoku core with full unit tests
+- [x] Puzzle generator and seeds; D1 schema and migrations
+- [x] Guest sessions (`/api/session`)
+- [x] Board, NumberPad and keyboard handling on `/dev/board`, driven by a local in-memory engine (conflict checking only)
 
 **Accept:** 500 puzzles per difficulty seeded locally. The dev board is fully playable with keyboard and touch. Core test coverage is above 90%.
 

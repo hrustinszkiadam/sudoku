@@ -15,7 +15,7 @@ pnpm db:seed:local                    # load puzzles into local D1
 pnpm dev                              # http://localhost:5173
 ```
 
-`seeds/puzzles.sql` is committed, so you only need `gen:puzzles` to regenerate it.
+`seeds/puzzles.sql` is git-ignored; it is fully reproducible from `--seed` (~90 s for 500 per difficulty).
 
 ## Scripts
 
