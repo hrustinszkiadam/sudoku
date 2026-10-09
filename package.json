@@ -9,7 +9,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite build && vite preview",
-		"typecheck": "tsc -b",
+		"typecheck": "tsc -b --force",
 		"lint": "biome check .",
 		"format": "biome check --write .",
 		"test": "vitest run",

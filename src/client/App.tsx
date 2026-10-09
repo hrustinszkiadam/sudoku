@@ -1,4 +1,11 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes, useParams } from "react-router";
+
+const DevBoard = import.meta.env.DEV
+	? lazy(() =>
+			import("./routes/DevBoard").then((m) => ({ default: m.DevBoard })),
+		)
+	: null;
 
 function Home() {
 	return <h1 className="p-4 text-2xl font-bold">Sudoku</h1>;
@@ -12,10 +19,13 @@ function Room() {
 export function App() {
 	return (
 		<BrowserRouter>
-			<Routes>
-				<Route path="/" element={<Home />} />
-				<Route path="/r/:code" element={<Room />} />
-			</Routes>
+			<Suspense fallback={null}>
+				<Routes>
+					<Route path="/" element={<Home />} />
+					<Route path="/r/:code" element={<Room />} />
+					{DevBoard && <Route path="/dev/board" element={<DevBoard />} />}
+				</Routes>
+			</Suspense>
 		</BrowserRouter>
 	);
 }
