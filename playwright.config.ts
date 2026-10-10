@@ -13,7 +13,7 @@ export default defineConfig({
 	},
 	projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
 	webServer: {
-		command: `pnpm vite dev --port ${PORT} --strictPort`,
+		command: `pnpm db:migrate:local && pnpm vite dev --port ${PORT} --strictPort`,
 		url: `http://localhost:${PORT}/api/health`,
 		reuseExistingServer: !process.env.CI,
 		timeout: 120_000,
