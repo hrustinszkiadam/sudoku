@@ -331,14 +331,14 @@ All messages are JSON objects with a `type` field, defined as Zod discriminated 
 
 ## Security and abuse checklist
 
-- [ ] The solution is never sent to clients. Covered by a test that serializes every server message type and asserts no 81-digit solution string is present.
-- [ ] Client-supplied `X-User-*` headers are stripped in the Worker.
-- [ ] Turnstile is verified server-side on `POST /api/rooms`.
-- [ ] Rate Limiting binding on room creation (per user) and on `GET /api/session` creation (per IP).
-- [ ] Per-connection token bucket and 1 KB message limit in the DO.
-- [ ] Max 8 players per room.
-- [ ] Nickname validation applied both on the server and in the DO.
-- [ ] Cookie is HttpOnly, Secure, SameSite=Lax, signed.
+- [x] The solution is never sent to clients. Covered by a test that serializes every server message type and asserts no 81-digit solution string is present.
+- [x] Client-supplied `X-User-*` headers are stripped in the Worker.
+- [x] Turnstile is verified server-side on `POST /api/rooms`.
+- [x] Rate Limiting binding on room creation (per user) and on `GET /api/session` creation (per IP).
+- [x] Per-connection token bucket and 1 KB message limit in the DO.
+- [x] Max 8 players per room.
+- [x] Nickname validation applied both on the server and in the DO.
+- [x] Cookie is HttpOnly, Secure, SameSite=Lax, signed.
 
 ---
 
@@ -395,11 +395,11 @@ All messages are JSON objects with a `type` field, defined as Zod discriminated 
 **Accept:** two browsers can create, join and finish a co-op game together. Solo play works as a one-person co-op room.
 
 ### Phase 3: Resilience and abuse protection
-- [ ] Reconnect with resync, version-gap detection, newer-tab-wins
-- [ ] Cleanup alarm
-- [ ] Turnstile, Rate Limiting binding, token bucket, size and player limits
-- [ ] Eviction tests and the "solution never leaks" test
-- [ ] Playwright co-op and reconnect tests
+- [x] Reconnect with resync, version-gap detection, newer-tab-wins
+- [x] Cleanup alarm
+- [x] Turnstile, Rate Limiting binding, token bucket, size and player limits
+- [x] Eviction tests and the "solution never leaks" test
+- [x] Playwright co-op and reconnect tests
 
 **Accept:** killing the network for 10 s and restoring it resyncs correctly. Evicting the DO mid-game loses nothing. Every item in the security checklist is ticked.
 
