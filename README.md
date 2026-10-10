@@ -82,4 +82,7 @@ pnpm run deploy
 
 ## CI/CD
 
-`.github/workflows/ci.yml` runs install → typecheck → lint → unit tests → worker tests → build on every PR. On push to `main` it then applies remote D1 migrations and deploys. It needs the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets (the token needs Workers Scripts, D1 and Workers Routes edit permissions).
+`.github/workflows/ci.yml` runs install → typecheck → lint → unit tests → worker tests → build on every PR. On push to `main` it then applies remote D1 migrations and deploys. It needs two repository secrets (Settings > Secrets and variables > Actions):
+
+- `CLOUDFLARE_ACCOUNT_ID`: the account id from `wrangler whoami`.
+- `CLOUDFLARE_API_TOKEN`: create it at <https://dash.cloudflare.com/profile/api-tokens> from the **Edit Cloudflare Workers** template, add **Account > D1 > Edit**, and limit zone resources to `hrustinszki.com`.
