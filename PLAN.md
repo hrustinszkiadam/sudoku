@@ -387,10 +387,10 @@ All messages are JSON objects with a `type` field, defined as Zod discriminated 
 **Accept:** 500 puzzles per difficulty seeded locally. The dev board is fully playable with keyboard and touch. Core test coverage is above 90%.
 
 ### Phase 2: Co-op rooms
-- [ ] `POST /api/rooms`, `GET /api/rooms/:code`, WebSocket route
-- [ ] `GameRoom` DO: init, join, co-op rules, presence, `game_over` + D1 write
-- [ ] Home and Room screens wired to the real backend
-- [ ] DO tests for join / place / mistake / complete
+- [x] `POST /api/rooms`, `GET /api/rooms/:code`, WebSocket route
+- [x] `GameRoom` DO: init, join, co-op rules, presence, `game_over` + D1 write
+- [x] Home and Room screens wired to the real backend
+- [x] DO tests for join / place / mistake / complete
 
 **Accept:** two browsers can create, join and finish a co-op game together. Solo play works as a one-person co-op room.
 
