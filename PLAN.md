@@ -404,9 +404,9 @@ All messages are JSON objects with a `type` field, defined as Zod discriminated 
 **Accept:** killing the network for 10 s and restoring it resyncs correctly. Evicting the DO mid-game loses nothing. Every item in the security checklist is ticked.
 
 ### Phase 4: Race mode
-- [ ] Lobby, host start, countdown, per-player boards, progress broadcasts, scoring, ranks
-- [ ] Client-side notes in `localStorage`
-- [ ] DO tests and a Playwright race test
+- [x] Lobby, host start, countdown, per-player boards, progress broadcasts, scoring, ranks
+- [x] Client-side notes in `localStorage`
+- [x] DO tests and a Playwright race test
 
 **Accept:** a 2–4 player race plays end to end. Opponents' digits are never visible in network traffic.
 
