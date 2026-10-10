@@ -14,6 +14,7 @@ import { Timer } from "../components/Timer";
 import { useBoardKeyboard } from "../components/useBoardKeyboard";
 import { api, type RoomPreview } from "../net/api";
 import { openRoomSocket, type RoomSocket } from "../net/socket";
+import { play } from "../sound";
 import {
 	createRoomStore,
 	type NotesStorage,
@@ -83,7 +84,13 @@ function RoomSession({ code }: { code: string }) {
 		let socket: RoomSocket | null = null;
 		const s = createRoomStore((msg) => socket?.send(msg), localNotes(code));
 		socket = openRoomSocket(code, {
-			onMessage: (msg) => s.getState().handle(msg),
+			onMessage: (msg) => {
+				s.getState().handle(msg);
+				const me = s.getState().me;
+				if (msg.type === "applied" && msg.by === me) play("place");
+				else if (msg.type === "mistake" && msg.by === me) play("mistake");
+				else if (msg.type === "game_over") play("win");
+			},
 			onStatus: (status) => s.getState().setConn(status),
 		});
 		setStore(s);
