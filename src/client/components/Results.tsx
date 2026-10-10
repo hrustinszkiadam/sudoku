@@ -25,7 +25,8 @@ export function Results({
 						<th className="py-1">Player</th>
 						<th className="py-1 text-right">Placed</th>
 						<th className="py-1 text-right">Mistakes</th>
-						<th className="py-1 text-right">{race ? "Score" : "Time"}</th>
+						<th className="py-1 text-right">Hints</th>
+						<th className="py-1 text-right">Score</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -38,14 +39,13 @@ export function Results({
 							<td className="py-1">{r.name}</td>
 							<td className="py-1 text-right">{r.placements}</td>
 							<td className="py-1 text-right">{r.mistakes}</td>
+							<td className="py-1 text-right">{r.hints}</td>
 							<td className="py-1 text-right font-mono">
-								{race
-									? r.scoreMs === null
+								{r.scoreMs === null
+									? race
 										? "DNF"
-										: formatMs(r.scoreMs)
-									: r.finishMs === null
-										? "–"
-										: formatMs(r.finishMs)}
+										: "–"
+									: formatMs(r.scoreMs)}
 							</td>
 						</tr>
 					))}
@@ -53,7 +53,7 @@ export function Results({
 			</table>
 			{race && (
 				<p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-					Score = finish time + 10 s per mistake.
+					Score = finish time + 10 s per mistake + 30 s per hint.
 				</p>
 			)}
 		</section>

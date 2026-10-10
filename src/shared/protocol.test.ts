@@ -16,6 +16,7 @@ describe("client messages", () => {
 			{ type: "start" },
 			{ type: "end" },
 			{ type: "resync" },
+			{ type: "hint", cell: 7 },
 		];
 		for (const m of valid) expect(clientMessageSchema.parse(m)).toEqual(m);
 	});
@@ -74,11 +75,13 @@ describe("server messages", () => {
 					selected: null,
 					placements: 0,
 					mistakes: 0,
+					hints: 0,
 					filled: 0,
 					finished: false,
 				},
 			],
 			mistakes: 0,
+			hints: 0,
 			startsAt: null,
 			startedAt: 1,
 			finishedAt: null,

@@ -34,6 +34,8 @@ export const raceMessage: ModeHandler = async (room, ws, me, msg) => {
 			return room.finish();
 		case "place":
 			return place(room, ws, me.userId, msg.cell, msg.digit);
+		case "hint":
+			return place(room, ws, me.userId, msg.cell, "hint");
 		case "note":
 		case "clear_notes":
 			return room.error(
@@ -81,12 +83,13 @@ async function start(room: Room, ws: WebSocket, userId: string) {
 	console.log({ event: "race_started", code: room.meta.code });
 }
 
+/** A player's move: a digit, or a hint that reveals the cell. */
 async function place(
 	room: Room,
 	ws: WebSocket,
 	userId: string,
 	cell: number,
-	digit: number,
+	digit: number | "hint",
 ) {
 	const { meta } = room;
 	const now = room.now();
@@ -109,43 +112,59 @@ async function place(
 		);
 	}
 
-	if (digitAt(meta.solution, cell) !== digit) {
+	const answer = digitAt(meta.solution, cell);
+	const hint = digit === "hint";
+	if (!hint && answer !== digit) {
 		incrementPlayer(room.sql, userId, "mistakes");
 		room.send(ws, { type: "mistake", cell, digit, by: userId });
 		room.broadcast(
 			{
 				type: "progress",
 				userId,
-				filled: player.placements,
+				filled: player.placements + player.hints,
 				mistakes: player.mistakes + 1,
+				hints: player.hints,
 			},
 			ws,
 		);
 		return;
 	}
 
-	const board = setCell(player.board, cell, digit);
+	const board = setCell(player.board, cell, answer);
 	const done = board === meta.solution;
-	const placements = player.placements + 1;
+	const after = {
+		...player,
+		placements: player.placements + (hint ? 0 : 1),
+		hints: player.hints + (hint ? 1 : 0),
+		finishedAt: done ? now : null,
+	};
 	// One row write per accepted move.
-	incrementPlayer(room.sql, userId, "placements", {
+	incrementPlayer(room.sql, userId, hint ? "hints" : "placements", {
 		board,
 		...(done ? { finishedAt: now } : {}),
 	});
+	const filled = after.placements + after.hints;
 	room.sendToUser(userId, {
 		type: "applied",
-		version: placements,
+		version: filled,
 		cell,
-		digit,
+		digit: answer,
 		by: userId,
+		...(hint ? { hint: true } : {}),
 	});
 	room.broadcast(
-		{ type: "progress", userId, filled: placements, mistakes: player.mistakes },
+		{
+			type: "progress",
+			userId,
+			filled,
+			mistakes: after.mistakes,
+			hints: after.hints,
+		},
 		ws,
 	);
 
 	if (done) {
-		const scoreMs = raceScoreMs(meta, { ...player, finishedAt: now }) ?? 0;
+		const scoreMs = raceScoreMs(meta, after) ?? 0;
 		room.broadcast({ type: "player_finished", userId, scoreMs });
 		await endIfEveryoneFinished(room);
 	}

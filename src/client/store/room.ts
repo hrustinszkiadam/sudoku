@@ -28,6 +28,8 @@ export interface RoomState extends GameState {
 	selected: number | null;
 	notesMode: boolean;
 	lastError: string | null;
+	/** This player's note edits, newest last, for undo. */
+	noteHistory: { cell: number; before: number }[];
 }
 
 export interface RoomActions {
@@ -38,6 +40,10 @@ export interface RoomActions {
 	toggleNote: (digit: number) => void;
 	clearNotes: () => void;
 	toggleNotesMode: () => void;
+	/** Reveal the selected cell for a score penalty. */
+	hint: () => void;
+	/** Undo this player's last note change. */
+	undoNote: () => void;
 	start: () => void;
 	end: () => void;
 	dismissError: () => void;
@@ -65,6 +71,7 @@ const initial = (): GameState & Omit<RoomState, keyof GameState> => ({
 	notes: emptyNotes(),
 	players: [],
 	mistakes: 0,
+	hints: 0,
 	startsAt: null,
 	startedAt: null,
 	finishedAt: null,
@@ -74,7 +81,10 @@ const initial = (): GameState & Omit<RoomState, keyof GameState> => ({
 	selected: null,
 	notesMode: false,
 	lastError: null,
+	noteHistory: [],
 });
+
+const MAX_NOTE_HISTORY = 100;
 
 const updatePlayer = (
 	players: Player[],
@@ -133,6 +143,14 @@ export function createRoomStore(
 			}, wait);
 		};
 
+		const remember = (cell: number) => {
+			const history = [
+				...get().noteHistory,
+				{ cell, before: get().notes[cell] },
+			];
+			set({ noteHistory: history.slice(-MAX_NOTE_HISTORY) });
+		};
+
 		const setNotes = (notes: Notes) => {
 			if (get().mode === "race") raceNotes?.save(notes);
 			set({ notes });
@@ -150,7 +168,13 @@ export function createRoomStore(
 							snap.mode === "race"
 								? (raceNotes?.load() ?? snap.notes)
 								: snap.notes;
-						set({ ...snap, notes, loaded: true, pending: new Map() });
+						set({
+							...snap,
+							notes,
+							loaded: true,
+							pending: new Map(),
+							noteHistory: snap.mode === "race" ? get().noteHistory : [],
+						});
 						return;
 					}
 					case "applied": {
@@ -158,15 +182,18 @@ export function createRoomStore(
 						const notes = removeNoteFromPeers(s.notes, msg.cell, msg.digit);
 						notes[msg.cell] = 0;
 						if (s.mode === "race") raceNotes?.save(notes);
+						const mine = s.mode === "coop" || msg.by === s.me;
 						set({
 							version: msg.version,
 							board: setCell(s.board, msg.cell, msg.digit),
 							notes,
 							pending: withoutPending(msg.cell),
-							players: updatePlayer(s.players, msg.by, (p) => ({
-								placements: p.placements + 1,
-								filled: p.filled + 1,
-							})),
+							hints: msg.hint && mine ? s.hints + 1 : s.hints,
+							players: updatePlayer(s.players, msg.by, (p) =>
+								msg.hint
+									? { hints: p.hints + 1, filled: p.filled + 1 }
+									: { placements: p.placements + 1, filled: p.filled + 1 },
+							),
 						});
 						return;
 					}
@@ -214,8 +241,8 @@ export function createRoomStore(
 						set({
 							players: updatePlayer(s.players, msg.userId, () => ({
 								filled: msg.filled,
-								placements: msg.filled,
 								mistakes: msg.mistakes,
+								hints: msg.hints,
 							})),
 						});
 						return;
@@ -275,6 +302,7 @@ export function createRoomStore(
 				const cell = s.selected;
 				if (cell === null || s.status !== "playing") return;
 				if (digitAt(s.board, cell) !== 0) return;
+				remember(cell);
 				if (s.mode === "race") {
 					const notes = s.notes.slice();
 					notes[cell] = toggleNote(notes[cell], digit);
@@ -288,6 +316,7 @@ export function createRoomStore(
 				const s = get();
 				const cell = s.selected;
 				if (cell === null || s.status !== "playing" || !s.notes[cell]) return;
+				remember(cell);
 				if (s.mode === "race") {
 					const notes = s.notes.slice();
 					notes[cell] = 0;
@@ -298,6 +327,45 @@ export function createRoomStore(
 			},
 
 			toggleNotesMode: () => set((s) => ({ notesMode: !s.notesMode })),
+
+			hint() {
+				const s = get();
+				const cell = s.selected;
+				if (cell === null || s.status !== "playing") return;
+				if (digitAt(s.board, cell) !== 0 || s.pending.has(cell)) return;
+				if (
+					s.mode === "race" &&
+					s.startsAt !== null &&
+					Date.now() < s.startsAt
+				) {
+					return;
+				}
+				send({ type: "hint", cell });
+			},
+
+			undoNote() {
+				const s = get();
+				if (s.status !== "playing") return;
+				const history = s.noteHistory.slice();
+				// Skip edits on cells that have since been filled.
+				let entry = history.pop();
+				while (entry && digitAt(s.board, entry.cell) !== 0)
+					entry = history.pop();
+				set({ noteHistory: history });
+				if (!entry) return;
+				const { cell, before } = entry;
+				set({ selected: cell });
+				if (s.mode === "race") {
+					const notes = s.notes.slice();
+					notes[cell] = before;
+					setNotes(notes);
+					return;
+				}
+				const diff = s.notes[cell] ^ before;
+				for (let d = 1; d <= 9; d++) {
+					if (diff & (1 << (d - 1))) send({ type: "note", cell, digit: d });
+				}
+			},
 			start: () => send({ type: "start" }),
 			end: () => send({ type: "end" }),
 			dismissError: () => set({ lastError: null }),

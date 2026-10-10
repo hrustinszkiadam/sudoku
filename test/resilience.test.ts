@@ -265,3 +265,20 @@ describe("cleanup alarm", () => {
 		});
 	});
 });
+
+describe("storage migrations", () => {
+	it("adds the hints column to rooms created before hints existed", async () => {
+		const host = await newGuest();
+		const code = await createRoomFor(host);
+		const stub = env.GAME_ROOM.getByName(code);
+		await runInDurableObject(stub, (_room: GameRoom, state) => {
+			state.storage.sql.exec("ALTER TABLE players DROP COLUMN hints");
+			state.storage.sql.exec("ALTER TABLE meta DROP COLUMN hints");
+		});
+		await evictDurableObject(stub);
+		const ws = await connect(code, host);
+		const snap = await ws.next("snapshot");
+		expect(snap.hints).toBe(0);
+		expect(snap.players[0].hints).toBe(0);
+	});
+});

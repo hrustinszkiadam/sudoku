@@ -31,7 +31,7 @@ export function Leaderboard() {
 		<main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
 			<h1 className="text-2xl font-bold">Leaderboard</h1>
 			<p className="text-sm text-slate-500 dark:text-slate-400">
-				Best score per player: finish time + 10 s per mistake.
+				Best score per player: finish time + 10 s per mistake + 30 s per hint.
 			</p>
 			<fieldset className="flex flex-wrap gap-2">
 				<legend className="sr-only">Mode</legend>

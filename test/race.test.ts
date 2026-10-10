@@ -133,6 +133,7 @@ describe("race play", () => {
 			userId: host.userId,
 			filled: 0,
 			mistakes: 1,
+			hints: 0,
 		});
 
 		a.send({ type: "place", cell: 0, digit: right(0) });
@@ -249,5 +250,33 @@ describe("race play", () => {
 		await runDurableObjectAlarm(stub);
 		await a.next("game_over");
 		expect((await stub.preview()).exists).toBe(true);
+	});
+
+	it("hints reveal a cell for the player only, with a 30 s penalty", async () => {
+		const { code, host, a, b } = await lobby();
+		await startNow(code, a, b);
+		a.send({ type: "hint", cell: 0 });
+		expect(await a.next("applied")).toMatchObject({
+			cell: 0,
+			digit: right(0),
+			hint: true,
+			version: 1,
+		});
+		expect(await b.next("progress")).toEqual({
+			type: "progress",
+			userId: host.userId,
+			filled: 1,
+			mistakes: 0,
+			hints: 1,
+		});
+		a.send({ type: "hint", cell: 0 });
+		expect(await a.next("error")).toMatchObject({ code: "invalid_move" });
+
+		a.send({ type: "place", cell: 1, digit: right(1) });
+		expect((await a.next("applied")).version).toBe(2);
+		a.send({ type: "hint", cell: 2 });
+		const finished = await b.next("player_finished");
+		expect(finished.scoreMs).toBeGreaterThanOrEqual(60_000);
+		expect(finished.scoreMs).toBeLessThan(70_000);
 	});
 });

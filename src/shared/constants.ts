@@ -18,6 +18,8 @@ export const RATE_REFILL_PER_SEC = 10;
 
 export const PING_INTERVAL_MS = 30_000;
 export const MISTAKE_PENALTY_MS = 10_000;
+/** Each hint (one revealed cell) adds this to the score. */
+export const HINT_PENALTY_MS = 30_000;
 export const RACE_COUNTDOWN_MS = 3_000;
 export const RACE_MAX_DURATION_MS = 2 * 60 * 60 * 1000;
 export const ROOM_IDLE_TTL_MS = 24 * 60 * 60 * 1000;

@@ -60,3 +60,25 @@ test("solo play works as a one-person co-op room", async ({ page }) => {
 	}
 	await expect(page.getByText("Solved together!")).toBeVisible();
 });
+
+test("hints reveal a cell and note edits can be undone", async ({ page }) => {
+	await createRoom(page);
+	const answer = await solution(page);
+	const empty = [...(await readBoard(page))]
+		.map((d, i) => (d === "0" ? i : -1))
+		.filter((i) => i >= 0);
+
+	await cell(page, empty[0]).click();
+	await page.keyboard.press("h");
+	await expect(cell(page, empty[0])).toHaveAttribute(
+		"aria-label",
+		new RegExp(`column \\d, ${answer[empty[0]]}`),
+	);
+	await expect(page.getByText(/Hints:\s*1/)).toBeVisible();
+
+	await cell(page, empty[1]).click();
+	await page.keyboard.press("Shift+Digit3");
+	await expect(cell(page, empty[1])).toHaveAttribute("aria-label", /notes 3/);
+	await page.keyboard.press("ControlOrMeta+z");
+	await expect(cell(page, empty[1])).toHaveAttribute("aria-label", /empty$/);
+});

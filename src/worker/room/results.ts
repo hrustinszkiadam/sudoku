@@ -1,14 +1,18 @@
-import { MISTAKE_PENALTY_MS } from "../../shared/constants";
+import { HINT_PENALTY_MS, MISTAKE_PENALTY_MS } from "../../shared/constants";
 import type { Result } from "../../shared/protocol";
 import { getDb } from "../db/client";
 import { gamePlayers, games } from "../db/schema";
 import type { Meta, PlayerRow } from "./storage";
 
-/** Race score: elapsed time since the start plus 10 s per mistake. */
+/** Time plus 10 s per mistake and 30 s per hint. */
+const penalized = (ms: number, mistakes: number, hints: number) =>
+	ms + MISTAKE_PENALTY_MS * mistakes + HINT_PENALTY_MS * hints;
+
+/** Race score: elapsed time since the start, plus penalties. */
 export const raceScoreMs = (meta: Meta, p: PlayerRow): number | null =>
 	p.finishedAt === null || meta.startsAt === null
 		? null
-		: p.finishedAt - meta.startsAt + MISTAKE_PENALTY_MS * p.mistakes;
+		: penalized(p.finishedAt - meta.startsAt, p.mistakes, p.hints);
 
 /**
  * Co-op: everyone shares the room time and the room's mistakes.
@@ -21,12 +25,13 @@ export function buildResults(meta: Meta, players: PlayerRow[]): Result[] {
 				? meta.finishedAt - meta.startedAt
 				: null;
 		const scoreMs =
-			finishMs === null ? null : finishMs + MISTAKE_PENALTY_MS * meta.mistakes;
+			finishMs === null ? null : penalized(finishMs, meta.mistakes, meta.hints);
 		return players.map((p) => ({
 			userId: p.userId,
 			name: p.name,
 			placements: p.placements,
 			mistakes: p.mistakes,
+			hints: p.hints,
 			finishMs: meta.status === "finished" ? finishMs : null,
 			scoreMs: meta.status === "finished" ? scoreMs : null,
 			rank: null,
@@ -50,6 +55,7 @@ export function buildResults(meta: Meta, players: PlayerRow[]): Result[] {
 		name: p.name,
 		placements: p.placements,
 		mistakes: p.mistakes,
+		hints: p.hints,
 		finishMs:
 			p.finishedAt !== null && meta.startsAt !== null
 				? p.finishedAt - meta.startsAt
@@ -85,7 +91,18 @@ export async function recordGame(
 	}
 	await db.batch([
 		insertGame,
-		db.insert(gamePlayers).values(results.map((r) => ({ gameId, ...r }))),
+		db.insert(gamePlayers).values(
+			results.map((r) => ({
+				gameId,
+				userId: r.userId,
+				name: r.name,
+				placements: r.placements,
+				mistakes: r.mistakes,
+				finishMs: r.finishMs,
+				scoreMs: r.scoreMs,
+				rank: r.rank,
+			})),
+		),
 	]);
 	return gameId;
 }

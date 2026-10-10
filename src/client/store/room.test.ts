@@ -24,11 +24,13 @@ const snapshot = (over: Partial<Snapshot> = {}): Snapshot => ({
 			selected: null,
 			placements: 0,
 			mistakes: 0,
+			hints: 0,
 			filled: 0,
 			finished: false,
 		},
 	],
 	mistakes: 0,
+	hints: 0,
 	startsAt: null,
 	startedAt: 0,
 	finishedAt: null,
@@ -125,5 +127,68 @@ describe("room store", () => {
 		store.getState().select(2);
 		store.getState().place(4);
 		expect(sent.filter((m) => m.type === "place")).toEqual([]);
+	});
+
+	it("sends hints and counts them", () => {
+		const { store, sent } = setup();
+		store.getState().select(2);
+		store.getState().hint();
+		expect(sent).toContainEqual({ type: "hint", cell: 2 });
+		store.getState().handle({
+			type: "applied",
+			version: 1,
+			cell: 2,
+			digit: 4,
+			by: "me",
+			hint: true,
+		});
+		const s = store.getState();
+		expect(s.hints).toBe(1);
+		expect(s.players[0]).toMatchObject({ hints: 1, placements: 0, filled: 1 });
+	});
+
+	it("undoes note edits by sending the toggles that restore them", () => {
+		const { store, sent } = setup();
+		store.getState().select(3);
+		store.getState().toggleNote(5);
+		store
+			.getState()
+			.handle({ type: "notes", version: 1, cell: 3, mask: 1 << 4, by: "me" });
+		store.getState().toggleNote(7);
+		store.getState().handle({
+			type: "notes",
+			version: 2,
+			cell: 3,
+			mask: (1 << 4) | (1 << 6),
+			by: "me",
+		});
+		store.getState().clearNotes();
+		store
+			.getState()
+			.handle({ type: "notes", version: 3, cell: 3, mask: 0, by: "me" });
+		sent.length = 0;
+
+		store.getState().undoNote();
+		expect(sent).toEqual([
+			{ type: "note", cell: 3, digit: 5 },
+			{ type: "note", cell: 3, digit: 7 },
+		]);
+	});
+
+	it("undoes race notes locally", () => {
+		const store = createRoomStore(() => {}, {
+			load: () => null,
+			save: () => {},
+		});
+		store.getState().handle(snapshot({ mode: "race" }));
+		store.getState().select(2);
+		store.getState().toggleNote(1);
+		store.getState().toggleNote(2);
+		store.getState().undoNote();
+		expect(store.getState().notes[2]).toBe(1);
+		store.getState().undoNote();
+		expect(store.getState().notes[2]).toBe(0);
+		store.getState().undoNote();
+		expect(store.getState().notes[2]).toBe(0);
 	});
 });

@@ -9,6 +9,9 @@ export const coopMessage: ModeHandler = async (room, ws, me, msg) => {
 	switch (msg.type) {
 		case "place":
 			return place(room, ws, me.userId, msg.cell, msg.digit);
+		case "hint":
+			if (!editableCell(room, ws, msg.cell)) return;
+			return applyCorrect(room, me.userId, msg.cell, true);
 		case "note":
 		case "clear_notes": {
 			if (!editableCell(room, ws, msg.cell)) return;
@@ -67,13 +70,38 @@ async function place(
 		return;
 	}
 
+	await applyCorrect(room, userId, cell, false);
+}
+
+/** Locks in the solution digit for `cell`, from a placement or a hint. */
+async function applyCorrect(
+	room: Room,
+	userId: string,
+	cell: number,
+	hint: boolean,
+) {
+	const { meta } = room;
+	const digit = digitAt(meta.solution, cell);
 	const board = setCell(meta.board, cell, digit);
 	const notes = removeNoteFromPeers(meta.notes, cell, digit);
 	notes[cell] = 0;
 	const version = meta.version + 1;
-	room.setMeta({ board, notes, version, lastActivityAt: now });
-	incrementPlayer(room.sql, userId, "placements");
-	room.broadcast({ type: "applied", version, cell, digit, by: userId });
+	room.setMeta({
+		board,
+		notes,
+		version,
+		lastActivityAt: room.now(),
+		...(hint ? { hints: meta.hints + 1 } : {}),
+	});
+	incrementPlayer(room.sql, userId, hint ? "hints" : "placements");
+	room.broadcast({
+		type: "applied",
+		version,
+		cell,
+		digit,
+		by: userId,
+		...(hint ? { hint: true } : {}),
+	});
 
 	if (board === meta.solution) await room.finish();
 }

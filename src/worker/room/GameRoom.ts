@@ -201,6 +201,7 @@ export class GameRoom extends DurableObject<Env> implements Room {
 			hostId: params.hostId,
 			version: 0,
 			mistakes: 0,
+			hints: 0,
 			createdAt: now,
 			startsAt: null,
 			startedAt: params.mode === "coop" ? now : null,
@@ -298,6 +299,7 @@ export class GameRoom extends DurableObject<Env> implements Room {
 				connected: true,
 				placements: 0,
 				mistakes: 0,
+				hints: 0,
 				board: this.meta.mode === "race" ? this.meta.givens : null,
 				finishedAt: null,
 			});
@@ -491,7 +493,8 @@ export class GameRoom extends DurableObject<Env> implements Room {
 			selected: race ? null : (selected.get(p.userId) ?? null),
 			placements: p.placements,
 			mistakes: p.mistakes,
-			filled: p.placements,
+			hints: p.hints,
+			filled: p.placements + p.hints,
 			finished: race ? p.finishedAt !== null : this.meta.status === "finished",
 		}));
 	}
@@ -505,7 +508,7 @@ export class GameRoom extends DurableObject<Env> implements Room {
 		const board = race ? (mine?.board ?? m.givens) : m.board;
 		return {
 			type: "snapshot",
-			version: race ? (mine?.placements ?? 0) : m.version,
+			version: race ? (mine ? mine.placements + mine.hints : 0) : m.version,
 			me: forUserId,
 			hostId: m.hostId,
 			mode: m.mode,
@@ -516,6 +519,7 @@ export class GameRoom extends DurableObject<Env> implements Room {
 			notes: race ? emptyNotes() : m.notes,
 			players: this.toClientPlayers(rows),
 			mistakes: race ? (mine?.mistakes ?? 0) : m.mistakes,
+			hints: race ? (mine?.hints ?? 0) : m.hints,
 			startsAt: m.startsAt,
 			startedAt: m.startedAt,
 			finishedAt: m.finishedAt,

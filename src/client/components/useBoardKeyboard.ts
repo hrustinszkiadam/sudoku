@@ -8,6 +8,8 @@ export interface BoardActions {
 	clearNotes: () => void;
 	toggleNotesMode: () => void;
 	notesMode: boolean;
+	hint?: () => void;
+	undoNote?: () => void;
 }
 
 const MOVES: Record<string, [number, number]> = {
@@ -34,7 +36,8 @@ const isTyping = (target: EventTarget | null) =>
 
 /**
  * Arrows / WASD move, 1-9 place (or note in notes mode), Shift+1-9 toggles a
- * note, N toggles notes mode, Backspace/Delete clears notes, Esc deselects.
+ * note, N toggles notes mode, Backspace/Delete clears notes, Esc deselects,
+ * H asks for a hint and Ctrl/Cmd+Z undoes the last note change (when supported).
  */
 export function useBoardKeyboard(actions: BoardActions, enabled = true) {
 	const ref = useRef(actions);
@@ -43,8 +46,16 @@ export function useBoardKeyboard(actions: BoardActions, enabled = true) {
 	useEffect(() => {
 		if (!enabled) return;
 		const onKey = (e: KeyboardEvent) => {
-			if (e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
+			if (isTyping(e.target)) return;
 			const a = ref.current;
+			if ((e.ctrlKey || e.metaKey) && e.code === "KeyZ" && !e.shiftKey) {
+				if (a.undoNote) {
+					e.preventDefault();
+					a.undoNote();
+				}
+				return;
+			}
+			if (e.ctrlKey || e.metaKey || e.altKey) return;
 
 			const move = MOVES[e.code];
 			if (move) {
@@ -67,6 +78,12 @@ export function useBoardKeyboard(actions: BoardActions, enabled = true) {
 				case "KeyN":
 					e.preventDefault();
 					a.toggleNotesMode();
+					break;
+				case "KeyH":
+					if (a.hint && a.selected !== null) {
+						e.preventDefault();
+						a.hint();
+					}
 					break;
 				case "Backspace":
 				case "Delete":

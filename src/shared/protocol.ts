@@ -18,6 +18,8 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
 	z.strictObject({ type: z.literal("place"), cell, digit }),
 	z.strictObject({ type: z.literal("note"), cell, digit }),
 	z.strictObject({ type: z.literal("clear_notes"), cell }),
+	/** Reveal one empty cell, for a score penalty. */
+	z.strictObject({ type: z.literal("hint"), cell }),
 	z.strictObject({ type: z.literal("select"), cell: cell.nullable() }),
 	z.strictObject({ type: z.literal("start") }),
 	z.strictObject({ type: z.literal("end") }),
@@ -41,6 +43,7 @@ export const playerSchema = z.object({
 	selected: cell.nullable(),
 	placements: z.number().int(),
 	mistakes: z.number().int(),
+	hints: z.number().int(),
 	filled: z.number().int(),
 	finished: z.boolean(),
 });
@@ -51,6 +54,7 @@ export const resultSchema = z.object({
 	name: z.string(),
 	placements: z.number().int(),
 	mistakes: z.number().int(),
+	hints: z.number().int(),
 	finishMs: z.number().int().nullable(),
 	scoreMs: z.number().int().nullable(),
 	rank: z.number().int().nullable(),
@@ -72,6 +76,8 @@ export const snapshotSchema = z.object({
 	notes: z.array(mask).length(81),
 	players: z.array(playerSchema),
 	mistakes: z.number().int(),
+	/** Co-op: the room's hints. Race: the requesting player's own. */
+	hints: z.number().int(),
 	startsAt: timestamp.nullable(),
 	startedAt: timestamp.nullable(),
 	finishedAt: timestamp.nullable(),
@@ -88,6 +94,8 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
 		cell,
 		digit,
 		by: z.string(),
+		/** True when the digit came from a hint. */
+		hint: z.boolean().optional(),
 	}),
 	z.object({ type: z.literal("mistake"), cell, digit, by: z.string() }),
 	z.object({
@@ -109,6 +117,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
 		userId: z.string(),
 		filled: z.number().int(),
 		mistakes: z.number().int(),
+		hints: z.number().int(),
 	}),
 	z.object({
 		type: z.literal("status"),

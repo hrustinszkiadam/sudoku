@@ -5,6 +5,10 @@ export interface NumberPadProps {
 	onDigit: (digit: number) => void;
 	onToggleNotes: () => void;
 	onClearNotes: () => void;
+	/** Shown only when provided (rooms; not the dev board). */
+	onHint?: () => void;
+	onUndo?: () => void;
+	canUndo?: boolean;
 }
 
 const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -15,6 +19,9 @@ export function NumberPad({
 	onDigit,
 	onToggleNotes,
 	onClearNotes,
+	onHint,
+	onUndo,
+	canUndo,
 }: NumberPadProps) {
 	const btn =
 		"rounded-md border border-slate-300 bg-white py-2 font-semibold shadow-sm active:scale-95 disabled:opacity-30 dark:border-slate-600 dark:bg-slate-800 focus-visible:outline-3 focus-visible:outline-amber-500";
@@ -48,6 +55,30 @@ export function NumberPad({
 					Clear notes <kbd className="text-xs opacity-60">⌫</kbd>
 				</button>
 			</div>
+			{(onHint || onUndo) && (
+				<div className="grid grid-cols-2 gap-2 text-sm">
+					{onUndo && (
+						<button
+							type="button"
+							className={btn}
+							onClick={onUndo}
+							disabled={!canUndo}
+						>
+							↶ Undo note <kbd className="text-xs opacity-60">⌘Z</kbd>
+						</button>
+					)}
+					{onHint && (
+						<button
+							type="button"
+							className={btn}
+							onClick={onHint}
+							title="Reveals the selected cell; adds 30 s to your score"
+						>
+							💡 Hint (+30 s) <kbd className="text-xs opacity-60">H</kbd>
+						</button>
+					)}
+				</div>
+			)}
 		</div>
 	);
 }

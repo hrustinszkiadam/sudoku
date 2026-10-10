@@ -18,6 +18,8 @@ export interface Meta {
 	hostId: string;
 	version: number;
 	mistakes: number;
+	/** Co-op: hints used by the room. */
+	hints: number;
 	createdAt: number;
 	startsAt: number | null;
 	startedAt: number | null;
@@ -33,6 +35,7 @@ export interface PlayerRow {
 	connected: boolean;
 	placements: number;
 	mistakes: number;
+	hints: number;
 	/** Race: the player's own board. */
 	board: string | null;
 	/** Race: when the player completed their board. */
@@ -52,6 +55,7 @@ const META_COLUMNS = {
 	hostId: "host_id",
 	version: "version",
 	mistakes: "mistakes",
+	hints: "hints",
 	createdAt: "created_at",
 	startsAt: "starts_at",
 	startedAt: "started_at",
@@ -67,6 +71,7 @@ const PLAYER_COLUMNS = {
 	connected: "connected",
 	placements: "placements",
 	mistakes: "mistakes",
+	hints: "hints",
 	board: "board",
 	finishedAt: "finished_at",
 } as const satisfies Record<keyof PlayerRow, string>;
@@ -87,6 +92,7 @@ export function createTables(sql: SqlStorage): void {
 			host_id TEXT NOT NULL,
 			version INTEGER NOT NULL DEFAULT 0,
 			mistakes INTEGER NOT NULL DEFAULT 0,
+			hints INTEGER NOT NULL DEFAULT 0,
 			created_at INTEGER NOT NULL,
 			starts_at INTEGER,
 			started_at INTEGER,
@@ -101,10 +107,28 @@ export function createTables(sql: SqlStorage): void {
 			connected INTEGER NOT NULL DEFAULT 0,
 			placements INTEGER NOT NULL DEFAULT 0,
 			mistakes INTEGER NOT NULL DEFAULT 0,
+			hints INTEGER NOT NULL DEFAULT 0,
 			board TEXT,
 			finished_at INTEGER
 		);
 	`);
+	// Rooms created before hints existed.
+	addColumnIfMissing(sql, "meta", "hints", "INTEGER NOT NULL DEFAULT 0");
+	addColumnIfMissing(sql, "players", "hints", "INTEGER NOT NULL DEFAULT 0");
+}
+
+function addColumnIfMissing(
+	sql: SqlStorage,
+	table: "meta" | "players",
+	column: string,
+	type: string,
+): void {
+	const columns = sql
+		.exec<{ name: string }>(`SELECT name FROM pragma_table_info('${table}')`)
+		.toArray();
+	if (!columns.some((c) => c.name === column)) {
+		sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+	}
 }
 
 type Row = Record<string, SqlStorageValue>;
@@ -127,6 +151,7 @@ function toMeta(r: Row): Meta {
 		hostId: String(r.host_id),
 		version: num(r.version),
 		mistakes: num(r.mistakes),
+		hints: num(r.hints),
 		createdAt: num(r.created_at),
 		startsAt: numOrNull(r.starts_at),
 		startedAt: numOrNull(r.started_at),
@@ -144,6 +169,7 @@ function toPlayer(r: Row): PlayerRow {
 		connected: num(r.connected) === 1,
 		placements: num(r.placements),
 		mistakes: num(r.mistakes),
+		hints: num(r.hints),
 		board: r.board === null ? null : String(r.board),
 		finishedAt: numOrNull(r.finished_at),
 	};
@@ -226,7 +252,7 @@ export function updatePlayer(
 export function incrementPlayer(
 	sql: SqlStorage,
 	userId: string,
-	column: "placements" | "mistakes",
+	column: "placements" | "mistakes" | "hints",
 	patch: Partial<PlayerRow> = {},
 ): void {
 	const { set, values } = assignments(PLAYER_COLUMNS, patch);

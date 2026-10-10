@@ -361,4 +361,35 @@ describe("co-op play", () => {
 			snap.players.find((p) => p.userId === friend.userId)?.connected,
 		).toBe(false);
 	});
+
+	it("a hint reveals the cell to everyone and adds a 30 s penalty", async () => {
+		const host = await newGuest();
+		const friend = await newGuest();
+		const code = await createRoomFor(host, { difficulty: "expert" });
+		const a = await connect(code, host);
+		await a.next("snapshot");
+		const b = await connect(code, friend);
+		await b.next("snapshot");
+
+		a.send({ type: "hint", cell: 0 });
+		expect(await b.next("applied")).toEqual({
+			type: "applied",
+			version: 1,
+			cell: 0,
+			digit: Number(NEARLY.solution[0]),
+			by: host.userId,
+			hint: true,
+		});
+		a.send({ type: "hint", cell: 0 });
+		expect(await a.next("error")).toMatchObject({ code: "invalid_move" });
+
+		b.send({ type: "place", cell: 1, digit: Number(NEARLY.solution[1]) });
+		b.send({ type: "place", cell: 2, digit: Number(NEARLY.solution[2]) });
+		const over = await a.next("game_over");
+		const mine = over.results.find((r) => r.userId === host.userId);
+		expect(mine).toMatchObject({ hints: 1, placements: 0 });
+		expect(mine?.scoreMs).toBeGreaterThanOrEqual(30_000);
+		a.send({ type: "resync" });
+		expect((await a.next("snapshot")).hints).toBe(1);
+	});
 });

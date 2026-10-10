@@ -193,6 +193,11 @@ function RoomView({ code, store }: { code: string; store: RoomStore }) {
 					/>
 					<span aria-live="polite">
 						{race ? "Your mistakes" : "Mistakes"}: <strong>{s.mistakes}</strong>
+						{s.hints > 0 && (
+							<>
+								{" · "}Hints: <strong>{s.hints}</strong>
+							</>
+						)}
 					</span>
 				</div>
 
@@ -262,6 +267,9 @@ function RoomView({ code, store }: { code: string; store: RoomStore }) {
 						onDigit={(d) => (s.notesMode ? s.toggleNote(d) : s.place(d))}
 						onToggleNotes={s.toggleNotesMode}
 						onClearNotes={s.clearNotes}
+						onHint={s.hint}
+						onUndo={s.undoNote}
+						canUndo={s.noteHistory.length > 0}
 					/>
 				)}
 			</div>
