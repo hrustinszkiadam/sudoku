@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { LeaderboardTable } from "../components/LeaderboardTable";
+import { usePageMeta } from "../meta";
 import { api, type Daily as DailyData } from "../net/api";
 import { useSession } from "../store/session";
 
 export function Daily() {
+	usePageMeta({
+		title: "Daily puzzle",
+		description:
+			"Today's free daily sudoku: one medium puzzle for everyone, new every day at midnight UTC. Compare your time on the daily leaderboard.",
+		path: "/daily",
+	});
 	const session = useSession((s) => s.session);
 	const [daily, setDaily] = useState<DailyData | null>(null);
 	const [error, setError] = useState<string | null>(null);

@@ -424,7 +424,7 @@ All messages are JSON objects with a `type` field, defined as Zod discriminated 
 _Code complete and tested. Sign-in goes live once the GitHub/Google OAuth apps exist and their secrets are set (see README)._
 
 ### Phase 7: Polish (optional)
-- [ ] Hints (reveal one cell, counted as a penalty), undo for notes, sound toggle, PWA install
+- [x] Hints (reveal one cell, counted as a penalty), undo for notes, sound toggle, PWA install
 
 ---
 

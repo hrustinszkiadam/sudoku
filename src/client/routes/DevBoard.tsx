@@ -4,6 +4,7 @@ import { Board } from "../components/Board";
 import { completedDigits } from "../components/digits";
 import { NumberPad } from "../components/NumberPad";
 import { useBoardKeyboard } from "../components/useBoardKeyboard";
+import { usePageMeta } from "../meta";
 import { useLocalGame } from "../store/localGame";
 
 const PUZZLE =
@@ -11,6 +12,7 @@ const PUZZLE =
 
 /** Development-only playground for the board component. */
 export function DevBoard() {
+	usePageMeta({ title: "Dev board", noindex: true });
 	const game = useLocalGame();
 	const { load } = game;
 	useEffect(() => load(PUZZLE), [load]);

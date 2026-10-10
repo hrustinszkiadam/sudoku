@@ -1,17 +1,82 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<title>Multiplayer Sudoku: play together in real time</title>
+		<meta
+			name="description"
+			content="Free online multiplayer sudoku. Solve one board together in co-op, race friends on the same puzzle, or play the daily challenge. No sign-up needed."
+		/>
+		<link rel="canonical" href="https://sudoku.hrustinszki.com/" />
+		<meta name="robots" content="index, follow" />
+
+		<!-- App / PWA -->
+		<meta name="application-name" content="Sudoku" />
+		<meta name="apple-mobile-web-app-title" content="Sudoku" />
+		<meta name="mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+		<meta name="format-detection" content="telephone=no" />
 		<meta name="color-scheme" content="light dark" />
-		<meta name="theme-color" content="#0284c7" />
-		<meta name="description" content="Play sudoku together in real time: co-op or race." />
+		<meta name="theme-color" content="#0284c7" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#020617" media="(prefers-color-scheme: dark)" />
 		<link rel="manifest" href="/manifest.webmanifest" />
-		<link rel="icon" type="image/png" href="/icon-192.png" />
+		<link rel="icon" href="/favicon.ico" sizes="48x48" />
+		<link rel="icon" href="/icon.svg" type="image/svg+xml" />
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-		<title>Sudoku</title>
+
+		<!-- Open Graph -->
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Multiplayer Sudoku" />
+		<meta property="og:locale" content="en_US" />
+		<meta property="og:url" content="https://sudoku.hrustinszki.com/" />
+		<meta property="og:title" content="Multiplayer Sudoku: play together in real time" />
+		<meta
+			property="og:description"
+			content="Solve one board together in co-op, race friends on the same puzzle, or play the daily challenge. Free, no sign-up."
+		/>
+		<meta property="og:image" content="https://sudoku.hrustinszki.com/og-image.png" />
+		<meta property="og:image:type" content="image/png" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta
+			property="og:image:alt"
+			content="A sudoku grid icon next to the words Multiplayer Sudoku: co-op, race, daily puzzle."
+		/>
+
+		<!-- Twitter / X -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content="Multiplayer Sudoku: play together in real time" />
+		<meta
+			name="twitter:description"
+			content="Solve one board together in co-op, race friends on the same puzzle, or play the daily challenge. Free, no sign-up."
+		/>
+		<meta name="twitter:image" content="https://sudoku.hrustinszki.com/og-image.png" />
+		<meta
+			name="twitter:image:alt"
+			content="A sudoku grid icon next to the words Multiplayer Sudoku: co-op, race, daily puzzle."
+		/>
+
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "WebApplication",
+				"name": "Multiplayer Sudoku",
+				"url": "https://sudoku.hrustinszki.com/",
+				"description": "Free online multiplayer sudoku: co-op on one shared board, races on the same puzzle, and a daily challenge.",
+				"applicationCategory": "GameApplication",
+				"genre": "Puzzle",
+				"operatingSystem": "Any",
+				"browserRequirements": "Requires JavaScript and WebSockets",
+				"image": "https://sudoku.hrustinszki.com/og-image.png",
+				"inLanguage": "en",
+				"isAccessibleForFree": true,
+				"offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+			}
+		</script>
 	</head>
 	<body>
+		<noscript>Multiplayer Sudoku needs JavaScript to play.</noscript>
 		<div id="root"></div>
 		<script type="module" src="/src/client/main.tsx"></script>
 	</body>

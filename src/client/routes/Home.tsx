@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { DIFFICULTIES, MODES, ROOM_CODE_LENGTH } from "../../shared/constants";
 import { History } from "../components/History";
 import { Turnstile } from "../components/Turnstile";
+import { usePageMeta } from "../meta";
 import { ApiError, type AuthProvider, api } from "../net/api";
 import { useSession } from "../store/session";
 import type { Difficulty, Mode } from "../types";
@@ -265,6 +266,7 @@ function JoinRoom() {
 }
 
 export function Home() {
+	usePageMeta({});
 	return (
 		<main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
 			<NameForm />

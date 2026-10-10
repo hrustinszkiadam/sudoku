@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="t">
+	<title id="t">Multiplayer Sudoku</title>
+	<rect width="64" height="64" rx="12" fill="#0284c7"/>
+	<rect x="24.7" y="24.7" width="14.6" height="14.6" fill="#fff" fill-opacity="0.25"/>
+	<rect x="29.6" y="29.6" width="4.9" height="4.9" fill="#fbbf24"/>
+	<g fill="none" stroke="#fff">
+		<path stroke-width="0.8" d="M14.9 10v44M19.8 10v44M29.6 10v44M34.4 10v44M44.2 10v44M49.1 10v44M10 14.9h44M10 19.8h44M10 29.6h44M10 34.4h44M10 44.2h44M10 49.1h44"/>
+		<path stroke-width="2.2" d="M24.7 10v44M39.3 10v44M10 24.7h44M10 39.3h44"/>
+		<rect x="10" y="10" width="44" height="44" stroke-width="2.2"/>
+	</g>
+</svg>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { DIFFICULTIES, MODES } from "../../shared/constants";
 import { LeaderboardTable } from "../components/LeaderboardTable";
+import { usePageMeta } from "../meta";
 import { api, type LeaderboardRow } from "../net/api";
 import { useSession } from "../store/session";
 import type { Difficulty, Mode } from "../types";
@@ -13,6 +14,12 @@ const tab = (active: boolean) =>
 	}`;
 
 export function Leaderboard() {
+	usePageMeta({
+		title: "Leaderboard",
+		description:
+			"The fastest multiplayer sudoku players by mode and difficulty: finish time plus penalties for mistakes and hints.",
+		path: "/leaderboard",
+	});
 	const session = useSession((s) => s.session);
 	const [difficulty, setDifficulty] = useState<Difficulty>("easy");
 	const [mode, setMode] = useState<Mode>("coop");

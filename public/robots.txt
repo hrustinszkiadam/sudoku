@@ -1,0 +1,8 @@
+# Rooms are private invites; the API and dev pages aren't content.
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /r/
+Disallow: /dev/
+
+Sitemap: https://sudoku.hrustinszki.com/sitemap.xml

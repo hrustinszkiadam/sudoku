@@ -83,6 +83,32 @@ function icon(size: number, maskable: boolean): Buffer {
 	});
 }
 
+/** ICO container holding PNG images (supported by every current browser). */
+function ico(images: { size: number; data: Buffer }[]): Buffer {
+	const header = Buffer.alloc(6);
+	header.writeUInt16LE(0, 0);
+	header.writeUInt16LE(1, 2);
+	header.writeUInt16LE(images.length, 4);
+	const entries: Buffer[] = [];
+	let offset = 6 + 16 * images.length;
+	for (const { size, data } of images) {
+		const e = Buffer.alloc(16);
+		e.writeUInt8(size >= 256 ? 0 : size, 0);
+		e.writeUInt8(size >= 256 ? 0 : size, 1);
+		e.writeUInt16LE(1, 4);
+		e.writeUInt16LE(32, 6);
+		e.writeUInt32LE(data.length, 8);
+		e.writeUInt32LE(offset, 12);
+		entries.push(e);
+		offset += data.length;
+	}
+	return Buffer.concat([header, ...entries, ...images.map((i) => i.data)]);
+}
+
+writeFileSync(
+	"public/favicon.ico",
+	ico([16, 32, 48].map((size) => ({ size, data: icon(size, false) }))),
+);
 writeFileSync("public/icon-192.png", icon(192, false));
 writeFileSync("public/icon-512.png", icon(512, false));
 writeFileSync("public/icon-maskable-512.png", icon(512, true));

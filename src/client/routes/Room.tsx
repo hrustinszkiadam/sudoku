@@ -12,6 +12,7 @@ import { PlayerList } from "../components/PlayerList";
 import { Results } from "../components/Results";
 import { Timer } from "../components/Timer";
 import { useBoardKeyboard } from "../components/useBoardKeyboard";
+import { usePageMeta } from "../meta";
 import { api, type RoomPreview } from "../net/api";
 import { openRoomSocket, type RoomSocket } from "../net/socket";
 import { play } from "../sound";
@@ -46,6 +47,7 @@ function localNotes(code: string): NotesStorage {
 
 export function Room() {
 	const code = (useParams().code ?? "").toUpperCase();
+	usePageMeta({ title: `Room ${code}`, noindex: true });
 	const session = useSession((s) => s.session);
 	const [preview, setPreview] = useState<RoomPreview | "error" | null>(null);
 
@@ -116,6 +118,12 @@ function RoomView({ code, store }: { code: string; store: RoomStore }) {
 	const [copied, setCopied] = useState(false);
 	const race = s.mode === "race";
 	const isHost = s.me === s.hostId;
+	usePageMeta({
+		title: s.loaded
+			? `${s.status === "finished" ? "Finished · " : ""}Room ${code} · ${race ? "Race" : "Co-op"}, ${s.difficulty}`
+			: `Room ${code}`,
+		noindex: true,
+	});
 
 	const countingDown =
 		race &&

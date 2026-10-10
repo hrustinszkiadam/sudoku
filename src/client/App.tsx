@@ -4,6 +4,7 @@ import { InstallButton } from "./components/InstallButton";
 import { Daily } from "./routes/Daily";
 import { Home } from "./routes/Home";
 import { Leaderboard } from "./routes/Leaderboard";
+import { NotFound } from "./routes/NotFound";
 import { Room } from "./routes/Room";
 import { useSound } from "./sound";
 import { useSession } from "./store/session";
@@ -84,6 +85,7 @@ export function App() {
 					<Route path="/daily" element={<Daily />} />
 					<Route path="/leaderboard" element={<Leaderboard />} />
 					{DevBoard && <Route path="/dev/board" element={<DevBoard />} />}
+					<Route path="*" element={<NotFound />} />
 				</Routes>
 			</Suspense>
 		</BrowserRouter>
