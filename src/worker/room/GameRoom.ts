@@ -218,6 +218,13 @@ export class GameRoom extends DurableObject<Env> implements Room {
 		return { created: true };
 	}
 
+	/** Who owns the room and what it plays; used to reuse daily rooms. */
+	async owner(): Promise<{ hostId: string; puzzleId: string } | null> {
+		return this.cached
+			? { hostId: this.meta.hostId, puzzleId: this.meta.puzzleId }
+			: null;
+	}
+
 	async preview(): Promise<RoomPreview | { exists: false }> {
 		if (!this.cached) return { exists: false };
 		const count = this.sql

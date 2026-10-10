@@ -19,9 +19,15 @@ export const sessionRoutes = new Hono<AppEnv>()
 		const existing = await readSession(c);
 		if (existing) return c.json(existing);
 
-		const ip = c.req.header("cf-connecting-ip") ?? "unknown";
-		const { success } = await c.env.SESSION_CREATE_LIMITER.limit({ key: ip });
-		if (!success) {
+		// Cloudflare always sets a public client IP in production. A missing or
+		// loopback address only happens in local dev and e2e runs, where one shared
+		// key would throttle every test browser.
+		const ip = c.req.header("cf-connecting-ip");
+		const local = !ip || ip === "127.0.0.1" || ip === "::1";
+		const limited =
+			!local &&
+			!(await c.env.SESSION_CREATE_LIMITER.limit({ key: ip })).success;
+		if (limited) {
 			return apiError(
 				c,
 				429,
