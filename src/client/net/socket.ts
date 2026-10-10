@@ -1,5 +1,9 @@
 import { WebSocket as ReconnectingWebSocket } from "partysocket";
-import { CLOSE_REPLACED, PING_INTERVAL_MS } from "../../shared/constants";
+import {
+	CLOSE_REPLACED,
+	ERROR_CODES,
+	PING_INTERVAL_MS,
+} from "../../shared/constants";
 import {
 	type ClientMessage,
 	clientMessageSchema,
@@ -41,9 +45,42 @@ export function openRoomSocket(
 	let everOpened = false;
 	let stopped = false;
 
+	// Keepalive: "ping" every 30 s. If the previous ping got no "pong",
+	// the connection is half-open, so force a reconnect.
+	let awaitingPong = false;
 	const ping = setInterval(() => {
-		if (ws.readyState === ws.OPEN) ws.send("ping");
+		if (ws.readyState !== ws.OPEN) return;
+		if (awaitingPong) {
+			awaitingPong = false;
+			ws.reconnect();
+			return;
+		}
+		awaitingPong = true;
+		ws.send("ping");
 	}, PING_INTERVAL_MS);
+
+	// The browser knows about network loss before the socket does.
+	const onOffline = () => {
+		if (!stopped) onStatus("reconnecting");
+	};
+	const onOnline = () => {
+		if (!stopped) ws.reconnect();
+	};
+	window.addEventListener("offline", onOffline);
+	window.addEventListener("online", onOnline);
+	const stop = () => {
+		stopped = true;
+		clearInterval(ping);
+		window.removeEventListener("offline", onOffline);
+		window.removeEventListener("online", onOnline);
+		ws.close();
+	};
+
+	/** Another tab took over; don't fight it. */
+	const replaced = () => {
+		stop();
+		onStatus("replaced");
+	};
 
 	ws.addEventListener("open", () => {
 		everOpened = true;
@@ -51,17 +88,11 @@ export function openRoomSocket(
 	});
 	ws.addEventListener("close", (e) => {
 		if (stopped) return;
-		if (e.code === CLOSE_REPLACED) {
-			// Another tab took over; don't fight it.
-			stopped = true;
-			clearInterval(ping);
-			ws.close();
-			onStatus("replaced");
-			return;
-		}
+		if (e.code === CLOSE_REPLACED) return replaced();
 		onStatus(everOpened ? "reconnecting" : "connecting");
 	});
 	ws.addEventListener("message", (e: MessageEvent) => {
+		awaitingPong = false;
 		if (typeof e.data !== "string" || e.data === "pong") return;
 		let json: unknown;
 		try {
@@ -76,7 +107,11 @@ export function openRoomSocket(
 				return;
 			}
 		}
-		onMessage(json as ServerMessage);
+		const msg = json as ServerMessage;
+		if (msg.type === "error" && msg.code === ERROR_CODES.replaced) {
+			return replaced();
+		}
+		onMessage(msg);
 	});
 
 	return {
@@ -85,9 +120,7 @@ export function openRoomSocket(
 			ws.send(JSON.stringify(msg));
 		},
 		close() {
-			stopped = true;
-			clearInterval(ping);
-			ws.close();
+			stop();
 			onStatus("closed");
 		},
 	};
