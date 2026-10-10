@@ -52,6 +52,7 @@ export const ERROR_CODES = {
 	notHost: "not_host",
 	notEnoughPlayers: "not_enough_players",
 	gameStarted: "game_started",
+	replaced: "replaced",
 	upgradeRequired: "upgrade_required",
 	noPuzzles: "no_puzzles",
 	internal: "internal_error",

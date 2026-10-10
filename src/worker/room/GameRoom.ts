@@ -263,7 +263,9 @@ export class GameRoom extends DurableObject<Env> implements Room {
 		}
 
 		// Newer tab wins: close this user's older sockets.
+		// The message makes this robust to proxies that drop close codes.
 		for (const old of this.ctx.getWebSockets(userId)) {
+			this.error(old, ERROR_CODES.replaced, "Opened in another tab");
 			old.close(CLOSE_REPLACED, "Replaced by a newer connection");
 		}
 

@@ -16,7 +16,11 @@ export const cookiePair = (setCookie: string | null): string =>
 	(setCookie ?? "").split(";")[0];
 
 export async function newGuest(): Promise<Guest> {
-	const res = await exports.default.fetch(`${BASE}/api/session`);
+	// A distinct client IP per guest keeps the per-IP session limit out of the way.
+	const ip = `10.${Array.from(crypto.getRandomValues(new Uint8Array(3))).join(".")}`;
+	const res = await exports.default.fetch(`${BASE}/api/session`, {
+		headers: { "cf-connecting-ip": ip },
+	});
 	if (!res.ok) throw new Error(`session failed: ${res.status}`);
 	const body = await res.json<{ userId: string; name: string }>();
 	return { ...body, cookie: cookiePair(res.headers.get("set-cookie")) };
