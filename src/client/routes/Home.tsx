@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { DIFFICULTIES, MODES, ROOM_CODE_LENGTH } from "../../shared/constants";
 import { History } from "../components/History";
 import { Turnstile } from "../components/Turnstile";
-import { ApiError, api } from "../net/api";
+import { ApiError, type AuthProvider, api } from "../net/api";
 import { useSession } from "../store/session";
 import type { Difficulty, Mode } from "../types";
 
@@ -62,6 +62,60 @@ function NameForm() {
 				</p>
 			)}
 		</form>
+	);
+}
+
+const PROVIDER_LABEL = { github: "GitHub", google: "Google" } as const;
+
+function AccountCard() {
+	const session = useSession((s) => s.session);
+	const signIn = useSession((s) => s.signIn);
+	const signOut = useSession((s) => s.signOut);
+	const [providers, setProviders] = useState<AuthProvider[]>([]);
+	useEffect(() => {
+		api
+			.config()
+			.then((c) => setProviders(c.authProviders))
+			.catch(() => setProviders([]));
+	}, []);
+
+	if (session?.account) {
+		return (
+			<section className={card}>
+				<p className="text-sm">
+					Signed in as <strong>{session.account.email}</strong>. Your games are
+					saved to your account.
+				</p>
+				<button
+					type="button"
+					className="self-start rounded-md border border-slate-300 px-3 py-1 text-sm dark:border-slate-600"
+					onClick={signOut}
+				>
+					Sign out
+				</button>
+			</section>
+		);
+	}
+	if (providers.length === 0) return null;
+	return (
+		<section className={card}>
+			<p className="text-sm">
+				Sign in to keep your history across devices. Your current guest games
+				come with you.
+			</p>
+			<div className="flex flex-wrap gap-2">
+				{providers.map((p) => (
+					<button
+						key={p}
+						type="button"
+						className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold dark:border-slate-600 dark:bg-slate-800"
+						onClick={() => signIn(p)}
+					>
+						Sign in with {PROVIDER_LABEL[p]}
+					</button>
+				))}
+			</div>
+		</section>
 	);
 }
 
@@ -214,6 +268,7 @@ export function Home() {
 	return (
 		<main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
 			<NameForm />
+			<AccountCard />
 			<CreateRoom />
 			<JoinRoom />
 			<History />

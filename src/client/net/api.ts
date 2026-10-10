@@ -31,9 +31,13 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 	return body as T;
 }
 
+export type AuthProvider = "github" | "google";
+
 export interface Session {
 	userId: string;
 	name: string;
+	/** Present when signed in with GitHub or Google. */
+	account?: { email: string; image: string | null } | null;
 }
 
 export interface RoomPreview {
@@ -81,7 +85,20 @@ export const api = {
 			method: "PATCH",
 			body: JSON.stringify({ name }),
 		}),
-	config: () => request<{ turnstileSiteKey: string }>("/config"),
+	config: () =>
+		request<{ turnstileSiteKey: string; authProviders: AuthProvider[] }>(
+			"/config",
+		),
+	/** Returns the provider's authorization URL to redirect to. */
+	signIn: (provider: AuthProvider, callbackURL: string) =>
+		request<{ url: string }>("/auth/sign-in/social", {
+			method: "POST",
+			body: JSON.stringify({ provider, callbackURL }),
+		}),
+	signOut: async () => {
+		await request("/auth/sign-out", { method: "POST", body: "{}" });
+		await request("/session", { method: "DELETE" });
+	},
 	createRoom: (body: {
 		mode: Mode;
 		difficulty: Difficulty;

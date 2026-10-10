@@ -4,6 +4,8 @@
 	"name": "sudoku",
 	"main": "src/worker/index.ts",
 	"compatibility_date": "2026-10-06",
+	// Better Auth needs AsyncLocalStorage.
+	"compatibility_flags": ["nodejs_compat"],
 	// Cloudflare manages the hrustinszki.com zone; deploy creates DNS + cert.
 	"routes": [{ "pattern": "sudoku.hrustinszki.com", "custom_domain": true }],
 	"assets": {

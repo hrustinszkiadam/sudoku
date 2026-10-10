@@ -28,6 +28,8 @@
 		"db:seed:remote": "wrangler d1 execute DB --remote --file seeds/puzzles.sql"
 	},
 	"dependencies": {
+		"@better-auth/drizzle-adapter": "^1.7.7",
+		"better-auth": "^1.7.7",
 		"drizzle-orm": "^0.45.3",
 		"hono": "^4.13.13",
 		"partysocket": "^1.3.0",

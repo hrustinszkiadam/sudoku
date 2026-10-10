@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { ERROR_CODES } from "../shared/constants";
+import { createAuth, enabledProviders } from "./auth";
 import { getDb } from "./db/client";
 import { ensureDailyPuzzle, utcDate } from "./db/queries";
 import { type AppEnv, apiError } from "./http";
@@ -15,7 +16,15 @@ export { GameRoom } from "./room/GameRoom";
 export const app = new Hono<AppEnv>()
 	.basePath("/api")
 	.get("/health", (c) => c.json({ ok: true }))
-	.get("/config", (c) => c.json({ turnstileSiteKey: c.env.TURNSTILE_SITE_KEY }))
+	.get("/config", (c) =>
+		c.json({
+			turnstileSiteKey: c.env.TURNSTILE_SITE_KEY,
+			authProviders: enabledProviders(c.env),
+		}),
+	)
+	.all("/auth/*", (c) =>
+		createAuth(c.env, new URL(c.req.url).origin).handler(c.req.raw),
+	)
 	.route("/session", sessionRoutes)
 	.route("/rooms", roomRoutes)
 	.route("/daily", dailyRoutes)

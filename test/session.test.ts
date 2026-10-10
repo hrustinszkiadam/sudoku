@@ -33,6 +33,7 @@ describe("GET /api/session", () => {
 		expect(await res.json()).toEqual({
 			userId: guest.userId,
 			name: guest.name,
+			account: null,
 		});
 		expect(res.headers.get("set-cookie")).toBeNull();
 	});

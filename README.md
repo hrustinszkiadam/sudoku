@@ -6,6 +6,7 @@ Online multiplayer sudoku on Cloudflare. One Worker serves the React SPA, the Ho
 - **Race**: same puzzle, separate boards. Opponents see only progress counts. Score = finish time + 10 s × mistakes.
 - **Daily**: one medium puzzle per UTC day, played in your own solo room, with a daily best-times table.
 - **Leaderboard** per mode and difficulty, and your last 20 games on the home page.
+- **Accounts (optional)**: sign in with GitHub or Google (Better Auth) to keep your history across devices. On first sign-in, your current guest history is linked to the account.
 
 ## Setup
 
@@ -75,10 +76,29 @@ npx wrangler d1 create sudoku
 npx wrangler turnstile widget create sudoku --domain sudoku.hrustinszki.com --mode managed
 npx wrangler secret put SESSION_SECRET          # e.g. `openssl rand -hex 32`
 npx wrangler secret put TURNSTILE_SECRET_KEY    # the widget's secret
+npx wrangler secret put BETTER_AUTH_SECRET      # e.g. `openssl rand -hex 32`
 pnpm db:migrate:remote
 pnpm gen:puzzles -- --per-difficulty 500 --seed 42 && pnpm db:seed:remote
 pnpm run deploy
 ```
+
+## Accounts (GitHub / Google sign-in)
+
+Better Auth runs on D1 through the Drizzle adapter at `/api/auth/*`. Its tables are prefixed `auth_`; game identity stays in `users`, linked by `users.auth_user_id`. Each provider is enabled only when both its client id and secret are set, and the sign-in buttons appear automatically.
+
+1. Create the OAuth apps:
+   - GitHub: <https://github.com/settings/developers> → New OAuth App, callback URL `https://sudoku.hrustinszki.com/api/auth/callback/github`.
+   - Google: Google Cloud Console → Credentials → OAuth client ID (Web), authorized redirect URI `https://sudoku.hrustinszki.com/api/auth/callback/google`.
+2. Store the credentials as Worker secrets:
+
+   ```sh
+   npx wrangler secret put GITHUB_CLIENT_ID
+   npx wrangler secret put GITHUB_CLIENT_SECRET
+   npx wrangler secret put GOOGLE_CLIENT_ID
+   npx wrangler secret put GOOGLE_CLIENT_SECRET
+   ```
+
+`BETTER_AUTH_SECRET` (any long random string) is required whenever the Worker is deployed. For local sign-in, create separate OAuth apps with `http://localhost:5173` callbacks and put their values in `.dev.vars`.
 
 ## CI/CD
 

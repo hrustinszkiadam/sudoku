@@ -21,8 +21,9 @@ export const puzzles = sqliteTable(
 );
 
 /**
- * Guests and (later) accounts. A guest is linked to an account by switching
- * `kind` to 'account' on the same row, so its history stays attached.
+ * Game identities. A guest is linked to an account by switching `kind` to
+ * 'account' and setting `auth_user_id` on the same row, so its history stays
+ * attached.
  */
 export const users = sqliteTable("users", {
 	id: text("id").primaryKey(),
@@ -31,6 +32,7 @@ export const users = sqliteTable("users", {
 		.default("guest"),
 	name: text("name").notNull(),
 	createdAt: integer("created_at").notNull(),
+	authUserId: text("auth_user_id").unique(),
 });
 
 export const games = sqliteTable(
@@ -72,3 +74,5 @@ export const dailyPuzzles = sqliteTable("daily_puzzles", {
 	date: text("date").primaryKey(),
 	puzzleId: text("puzzle_id").notNull(),
 });
+
+export * from "./auth-schema";

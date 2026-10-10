@@ -418,8 +418,10 @@ All messages are JSON objects with a `type` field, defined as Zod discriminated 
 **Accept:** the daily puzzle changes at UTC midnight. The leaderboard shows the best `score_ms` per user per difficulty.
 
 ### Phase 6: Accounts (optional)
-- [ ] Better Auth on D1 (via the Drizzle adapter) with GitHub and Google sign-in
-- [ ] Link the current guest's history to the new account on first sign-in
+- [x] Better Auth on D1 (via the Drizzle adapter) with GitHub and Google sign-in
+- [x] Link the current guest's history to the new account on first sign-in
+
+_Code complete and tested. Sign-in goes live once the GitHub/Google OAuth apps exist and their secrets are set (see README)._
 
 ### Phase 7: Polish (optional)
 - [ ] Hints (reveal one cell, counted as a penalty), undo for notes, sound toggle, PWA install

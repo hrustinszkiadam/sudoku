@@ -4,3 +4,11 @@ SESSION_SECRET=dev-only-change-me-0123456789abcdef
 # Cloudflare's documented Turnstile test keys (always pass).
 TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 TURNSTILE_SITE_KEY=1x00000000000000000000AA
+# Signs Better Auth sessions. Any long random string.
+BETTER_AUTH_SECRET=dev-only-better-auth-secret-0123456789abcdef
+# Optional OAuth apps; a provider is enabled only when both values are set.
+# Callback URL: <origin>/api/auth/callback/github (or /google)
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
