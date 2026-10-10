@@ -392,4 +392,43 @@ describe("co-op play", () => {
 		a.send({ type: "resync" });
 		expect((await a.next("snapshot")).hints).toBe(1);
 	});
+
+	it("starts the clock on the first move, not on create or join", async () => {
+		const host = await newGuest();
+		const friend = await newGuest();
+		const code = await createRoomFor(host);
+		const a = await connect(code, host);
+		expect((await a.next("snapshot")).startedAt).toBeNull();
+		// Joining doesn't start (or restart) anything.
+		const b = await connect(code, friend);
+		expect((await b.next("snapshot")).startedAt).toBeNull();
+		a.send({ type: "select", cell: 40 });
+		await b.next("presence");
+		b.send({ type: "resync" });
+		expect((await b.next("snapshot")).startedAt).toBeNull();
+
+		const before = Date.now();
+		b.send({ type: "note", cell: CELL, digit: 1 });
+		const started = await a.next("status");
+		expect(started).toMatchObject({ type: "status", status: "playing" });
+		expect(started.startedAt).toBeGreaterThanOrEqual(before);
+		await a.next("notes");
+
+		// Later moves and late joiners keep the original start.
+		a.send({ type: "place", cell: CELL, digit: RIGHT });
+		await a.next("applied");
+		const late = await connect(code, await newGuest());
+		expect((await late.next("snapshot")).startedAt).toBe(started.startedAt);
+		expect(await a.none("status")).toBe(true);
+	});
+
+	it("a wrong first digit also starts the clock", async () => {
+		const host = await newGuest();
+		const code = await createRoomFor(host);
+		const a = await connect(code, host);
+		await a.next("snapshot");
+		a.send({ type: "place", cell: CELL, digit: WRONG });
+		expect((await a.next("status")).startedAt).toBeTypeOf("number");
+		await a.next("mistake");
+	});
 });

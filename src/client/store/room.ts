@@ -250,6 +250,7 @@ export function createRoomStore(
 						set({
 							status: msg.status,
 							startsAt: msg.startsAt ?? s.startsAt,
+							startedAt: msg.startedAt ?? s.startedAt,
 						});
 						return;
 					case "player_finished":

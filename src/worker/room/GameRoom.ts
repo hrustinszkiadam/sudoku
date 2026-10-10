@@ -204,7 +204,8 @@ export class GameRoom extends DurableObject<Env> implements Room {
 			hints: 0,
 			createdAt: now,
 			startsAt: null,
-			startedAt: params.mode === "coop" ? now : null,
+			// Co-op starts the clock on the first move, race on the host's start.
+			startedAt: null,
 			finishedAt: null,
 			lastActivityAt: now,
 		};

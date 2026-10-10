@@ -19,7 +19,9 @@ export const coopMessage: ModeHandler = async (room, ws, me, msg) => {
 			notes[msg.cell] =
 				msg.type === "note" ? toggleNote(notes[msg.cell], msg.digit) : 0;
 			const version = room.meta.version + 1;
-			room.setMeta({ notes, version, lastActivityAt: room.now() });
+			const clock = startClock(room);
+			room.setMeta({ notes, version, lastActivityAt: room.now(), ...clock });
+			announceClock(room, clock);
 			room.broadcast({
 				type: "notes",
 				version,
@@ -38,6 +40,26 @@ export const coopMessage: ModeHandler = async (room, ws, me, msg) => {
 			);
 	}
 };
+
+/**
+ * The co-op clock starts with the first move (digit, note or hint), not when
+ * the room is created, so waiting for friends to join doesn't count. Returns
+ * the patch to merge into the move's single meta write.
+ */
+function startClock(room: Room): { startedAt?: number } {
+	return room.meta.startedAt === null ? { startedAt: room.now() } : {};
+}
+
+/** Tells everyone the clock started, after the move has been persisted. */
+function announceClock(room: Room, clock: { startedAt?: number }): void {
+	if (clock.startedAt !== undefined) {
+		room.broadcast({
+			type: "status",
+			status: "playing",
+			startedAt: clock.startedAt,
+		});
+	}
+}
 
 /** True when the room is playing and `cell` is empty; otherwise reports an error. */
 function editableCell(room: Room, ws: WebSocket, cell: number): boolean {
@@ -64,7 +86,13 @@ async function place(
 	const now = room.now();
 
 	if (digitAt(meta.solution, cell) !== digit) {
-		room.setMeta({ mistakes: meta.mistakes + 1, lastActivityAt: now });
+		const clock = startClock(room);
+		room.setMeta({
+			mistakes: meta.mistakes + 1,
+			lastActivityAt: now,
+			...clock,
+		});
+		announceClock(room, clock);
 		incrementPlayer(room.sql, userId, "mistakes");
 		room.broadcast({ type: "mistake", cell, digit, by: userId });
 		return;
@@ -86,13 +114,16 @@ async function applyCorrect(
 	const notes = removeNoteFromPeers(meta.notes, cell, digit);
 	notes[cell] = 0;
 	const version = meta.version + 1;
+	const clock = startClock(room);
 	room.setMeta({
 		board,
 		notes,
 		version,
 		lastActivityAt: room.now(),
+		...clock,
 		...(hint ? { hints: meta.hints + 1 } : {}),
 	});
+	announceClock(room, clock);
 	incrementPlayer(room.sql, userId, hint ? "hints" : "placements");
 	room.broadcast({
 		type: "applied",

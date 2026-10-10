@@ -123,6 +123,8 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
 		type: z.literal("status"),
 		status: z.enum(STATUSES),
 		startsAt: timestamp.optional(),
+		/** Co-op: when the first move started the clock. */
+		startedAt: timestamp.optional(),
 	}),
 	z.object({
 		type: z.literal("player_finished"),

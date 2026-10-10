@@ -191,4 +191,12 @@ describe("room store", () => {
 		store.getState().undoNote();
 		expect(store.getState().notes[2]).toBe(0);
 	});
+
+	it("picks up the co-op clock start from a status message", () => {
+		const { store } = setup({ startedAt: null });
+		store
+			.getState()
+			.handle({ type: "status", status: "playing", startedAt: 1234 });
+		expect(store.getState().startedAt).toBe(1234);
+	});
 });
