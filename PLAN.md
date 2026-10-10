@@ -376,7 +376,7 @@ All messages are JSON objects with a `type` field, defined as Zod discriminated 
 - [x] Scripts: `dev`, `build`, `typecheck`, `lint`, `test`, `test:e2e`, `deploy`, `gen:puzzles`, `db:migrate:local`, `db:migrate:remote`, `db:seed:local`, `db:seed:remote`
 - [x] README with setup steps
 
-**Accept:** `pnpm dev` serves the app and `/api/health` from one origin. All test commands run. The first deploy succeeds. _(Deploy pending: blocked for the agent, run `pnpm run deploy` manually.)_
+**Accept:** `pnpm dev` serves the app and `/api/health` from one origin. All test commands run. The first deploy succeeds. _(Deployed to https://sudoku.hrustinszki.com.)_
 
 ### Phase 1: Core, puzzles, board UI
 - [x] Shared sudoku core with full unit tests
