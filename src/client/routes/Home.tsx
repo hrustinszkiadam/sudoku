@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { DIFFICULTIES, MODES, ROOM_CODE_LENGTH } from "../../shared/constants";
+import { History } from "../components/History";
 import { Turnstile } from "../components/Turnstile";
 import { ApiError, api } from "../net/api";
 import { useSession } from "../store/session";
@@ -215,6 +216,7 @@ export function Home() {
 			<NameForm />
 			<CreateRoom />
 			<JoinRoom />
+			<History />
 		</main>
 	);
 }

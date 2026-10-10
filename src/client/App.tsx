@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect } from "react";
-import { BrowserRouter, Link, Route, Routes } from "react-router";
+import { BrowserRouter, Link, NavLink, Route, Routes } from "react-router";
+import { Daily } from "./routes/Daily";
 import { Home } from "./routes/Home";
+import { Leaderboard } from "./routes/Leaderboard";
 import { Room } from "./routes/Room";
 import { useSession } from "./store/session";
 
@@ -10,6 +12,9 @@ const DevBoard = import.meta.env.DEV
 		)
 	: null;
 
+const navClass = ({ isActive }: { isActive: boolean }) =>
+	isActive ? "font-semibold underline" : "hover:underline";
+
 function Header() {
 	const session = useSession((s) => s.session);
 	return (
@@ -18,6 +23,12 @@ function Header() {
 				<Link to="/" className="text-lg font-bold">
 					Sudoku
 				</Link>
+				<NavLink to="/daily" className={navClass}>
+					Daily
+				</NavLink>
+				<NavLink to="/leaderboard" className={navClass}>
+					Leaderboard
+				</NavLink>
 				{session && (
 					<span className="ml-auto truncate text-slate-500 dark:text-slate-400">
 						{session.name}
@@ -47,6 +58,8 @@ export function App() {
 				<Routes>
 					<Route path="/" element={<Home />} />
 					<Route path="/r/:code" element={<Room />} />
+					<Route path="/daily" element={<Daily />} />
+					<Route path="/leaderboard" element={<Leaderboard />} />
 					{DevBoard && <Route path="/dev/board" element={<DevBoard />} />}
 				</Routes>
 			</Suspense>

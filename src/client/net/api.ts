@@ -45,6 +45,35 @@ export interface RoomPreview {
 	maxPlayers?: number;
 }
 
+export interface LeaderboardRow {
+	userId: string;
+	name: string;
+	bestMs: number;
+	games: number;
+}
+
+export interface Daily {
+	date: string;
+	difficulty: Difficulty;
+	code: string;
+	leaderboard: LeaderboardRow[];
+}
+
+export interface HistoryGame {
+	gameId: string;
+	roomCode: string;
+	mode: Mode;
+	difficulty: Difficulty;
+	status: "won" | "abandoned";
+	startedAt: number;
+	finishedAt: number;
+	placements: number;
+	mistakes: number;
+	finishMs: number | null;
+	scoreMs: number | null;
+	rank: number | null;
+}
+
 export const api = {
 	session: () => request<Session>("/session"),
 	rename: (name: string) =>
@@ -64,4 +93,10 @@ export const api = {
 		}),
 	room: (code: string) =>
 		request<RoomPreview>(`/rooms/${encodeURIComponent(code)}`),
+	daily: () => request<Daily>("/daily"),
+	leaderboard: (difficulty: Difficulty, mode: Mode) =>
+		request<{ rows: LeaderboardRow[] }>(
+			`/leaderboard?difficulty=${difficulty}&mode=${mode}`,
+		),
+	history: () => request<{ games: HistoryGame[] }>("/me/history"),
 };
