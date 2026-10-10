@@ -411,9 +411,9 @@ All messages are JSON objects with a `type` field, defined as Zod discriminated 
 **Accept:** a 2–4 player race plays end to end. Opponents' digits are never visible in network traffic.
 
 ### Phase 5: Daily puzzle, history, leaderboards
-- [ ] Cron picks the next day's puzzle into `daily_puzzles` (one per difficulty or a single medium puzzle; choose one and document it)
-- [ ] `/daily`, `/leaderboard`, `GET /api/me/history`
-- [ ] Leaderboard queries cached briefly with the Cache API
+- [x] Cron picks the next day's puzzle into `daily_puzzles` (one per difficulty or a single medium puzzle; choose one and document it) _Chosen: a single **medium** puzzle per UTC day, played as a personal solo co-op room; see README._
+- [x] `/daily`, `/leaderboard`, `GET /api/me/history`
+- [x] Leaderboard queries cached briefly with the Cache API
 
 **Accept:** the daily puzzle changes at UTC midnight. The leaderboard shows the best `score_ms` per user per difficulty.
 
