@@ -38,7 +38,7 @@
 	],
 	"vars": {
 		// Public Turnstile site key. Overridden by .dev.vars locally.
-		"TURNSTILE_SITE_KEY": "1x00000000000000000000AA"
+		"TURNSTILE_SITE_KEY": "0x4AAAAAAFRxaP8TiOkrAZj7"
 	},
 	"triggers": { "crons": ["5 0 * * *"] },
 	"observability": { "enabled": true }
