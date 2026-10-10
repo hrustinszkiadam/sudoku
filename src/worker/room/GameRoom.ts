@@ -24,7 +24,7 @@ import {
 import { isGridString } from "../../shared/sudoku/grid";
 import { emptyNotes } from "../../shared/sudoku/notes";
 import { coopMessage } from "./coop";
-import { raceMessage } from "./race";
+import { endIfEveryoneFinished, raceMessage } from "./race";
 import { buildResults, recordGame } from "./results";
 import {
 	createTables,
@@ -135,6 +135,11 @@ export class GameRoom extends DurableObject<Env> implements Room {
 
 	error(ws: WebSocket, code: ErrorCode, message: string): void {
 		this.send(ws, { type: "error", code, message });
+	}
+
+	async scheduleAlarm(at: number): Promise<void> {
+		const current = await this.ctx.storage.getAlarm();
+		if (current === null || at < current) await this.ctx.storage.setAlarm(at);
 	}
 
 	sockets(userId?: string): WebSocket[] {
@@ -345,7 +350,7 @@ export class GameRoom extends DurableObject<Env> implements Room {
 	}
 
 	override async webSocketClose(ws: WebSocket, code: number, reason: string) {
-		this.disconnect(ws);
+		await this.disconnect(ws);
 		// Complete the close handshake (safe even when the runtime auto-replies).
 		try {
 			ws.close(code === 1005 ? 1000 : code, reason);
@@ -355,10 +360,10 @@ export class GameRoom extends DurableObject<Env> implements Room {
 	}
 
 	override async webSocketError(ws: WebSocket) {
-		this.disconnect(ws);
+		await this.disconnect(ws);
 	}
 
-	private disconnect(ws: WebSocket) {
+	private async disconnect(ws: WebSocket) {
 		if (!this.cached) return;
 		const me = ws.deserializeAttachment() as Attachment | null;
 		if (!me) return;
@@ -372,6 +377,8 @@ export class GameRoom extends DurableObject<Env> implements Room {
 			code: this.meta.code,
 			userId: me.userId,
 		});
+		// A race also ends when everyone still connected has finished.
+		await endIfEveryoneFinished(this);
 	}
 
 	/** Per-connection token bucket: burst 20, refill 10/s. */

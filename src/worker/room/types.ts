@@ -23,6 +23,8 @@ export interface Room {
 	error(ws: WebSocket, code: ErrorCode, message: string): void;
 	/** Marks the game finished, records it in D1 and broadcasts game_over. */
 	finish(): Promise<void>;
+	/** Moves the alarm earlier to `at` (never later). */
+	scheduleAlarm(at: number): Promise<void>;
 	/** Open sockets, optionally for one user. */
 	sockets(userId?: string): WebSocket[];
 }

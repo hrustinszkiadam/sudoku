@@ -1,3 +1,5 @@
+import { runInDurableObject } from "cloudflare:test";
+import { env } from "cloudflare:workers";
 import {
 	afterEach,
 	beforeAll,
@@ -8,6 +10,7 @@ import {
 	vi,
 } from "vitest";
 import type { ServerMessage } from "../src/shared/protocol";
+import type { GameRoom } from "../src/worker/room/GameRoom";
 import {
 	closeAllSockets,
 	connect,
@@ -101,5 +104,52 @@ describe("the solution never leaves the server", () => {
 			expect(seen, type).toContain(type);
 		}
 		expectNoSolution([a, b, c], NEARLY.solution);
+	});
+
+	it("in any race message type, and opponents never see your digits", async () => {
+		const host = await newGuest();
+		const rival = await newGuest();
+		const code = await createRoomFor(host, {
+			mode: "race",
+			difficulty: "expert",
+		});
+		const a = await connect(code, host);
+		await a.next("snapshot");
+		const b = await connect(code, rival);
+		await b.next("snapshot");
+		a.send({ type: "start" });
+		await a.next("status");
+		await b.next("status");
+		await runInDurableObject(
+			env.GAME_ROOM.getByName(code),
+			(room: GameRoom) => {
+				room.setMeta({ startsAt: Date.now() - 1 });
+			},
+		);
+
+		const right = (cell: number) => Number(NEARLY.solution[cell]);
+		a.send({ type: "place", cell: 0, digit: right(0) === 1 ? 2 : 1 });
+		await a.next("mistake");
+		for (const cell of [0, 1, 2])
+			a.send({ type: "place", cell, digit: right(cell) });
+		await b.next("player_finished");
+		b.send({ type: "end" });
+		await b.next("error");
+		b.send({ type: "resync" });
+		const snap = await b.next("snapshot");
+		a.send({ type: "end" });
+		await b.next("game_over");
+
+		const seen = new Set(a.received.concat(b.received).map((m) => m.type));
+		for (const type of ["status", "progress", "player_finished", "game_over"]) {
+			expect(seen, type).toContain(type);
+		}
+		// Only A's own socket learns where A put digits.
+		for (const m of b.received) {
+			expect(m.type).not.toBe("applied");
+			expect(m.type).not.toBe("mistake");
+		}
+		expect(snap.board).toBe(NEARLY.givens);
+		expectNoSolution([a, b], NEARLY.solution);
 	});
 });
