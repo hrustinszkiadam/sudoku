@@ -98,15 +98,15 @@ export function Kbd({ children }: { children: ReactNode }) {
 	);
 }
 
-const base =
+export const btnBase =
 	"inline-flex items-center justify-center gap-2 font-bold whitespace-nowrap transition-[background-color,box-shadow,translate,color] duration-(--duration-fast) ease-(--ease-standard) active:translate-y-px disabled:cursor-not-allowed disabled:active:translate-y-0";
 
 /** Button looks. Heights: lg 56 (primary actions), md 48, sm 40. */
 export const btn = {
-	primary: `${base} bg-brand text-on-brand shadow-[0_8px_20px_-8px_var(--color-brand)] hover:bg-brand-strong active:shadow-none disabled:bg-brand/45 disabled:shadow-none`,
-	secondary: `${base} border border-line bg-surface text-ink hover:bg-sunken disabled:text-ink-3`,
-	ghost: `${base} text-ink-2 hover:bg-sunken hover:text-ink`,
-	danger: `${base} border border-danger bg-surface text-danger hover:bg-danger-soft`,
+	primary: `${btnBase} bg-brand text-on-brand shadow-[0_8px_20px_-8px_var(--color-brand)] hover:bg-brand-strong active:shadow-none disabled:bg-brand/45 disabled:shadow-none`,
+	secondary: `${btnBase} border border-line bg-surface text-ink hover:bg-sunken disabled:text-ink-3`,
+	ghost: `${btnBase} text-ink-2 hover:bg-sunken hover:text-ink`,
+	danger: `${btnBase} border border-danger bg-surface text-danger hover:bg-danger-soft`,
 	lg: "h-14 rounded-lg px-6 text-[17px]",
 	md: "h-12 rounded-md px-5 text-base",
 	sm: "h-10 rounded-md px-3.5 text-[15px]",
@@ -132,3 +132,29 @@ export function Overline({
 }
 
 export const card = "rounded-lg bg-surface shadow-card";
+
+/**
+ * Two labels in one grid cell: the button is always as wide as the longer
+ * one, so swapping "Copy link" for "Copied" never shifts the layout.
+ */
+export function SwapLabel({
+	on,
+	idle,
+	done,
+}: {
+	on: boolean;
+	idle: ReactNode;
+	done: ReactNode;
+}) {
+	const layer =
+		"col-start-1 row-start-1 inline-flex items-center justify-center gap-2";
+	return (
+		<span className="inline-grid">
+			<span className={`${layer} ${on ? "invisible" : ""}`}>{idle}</span>
+			<span className={`${layer} ${on ? "" : "invisible"}`}>{done}</span>
+			<span role="status" className="sr-only">
+				{on ? "Copied" : ""}
+			</span>
+		</span>
+	);
+}

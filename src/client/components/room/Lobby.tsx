@@ -1,7 +1,7 @@
 import { IconCheck, IconFlag, IconLink, IconShare2 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import type { Difficulty } from "../../types";
-import { btn, I } from "../ui";
+import { btn, I, SwapLabel } from "../ui";
 import { modeLabel } from "./RoomBar";
 import { canShare, inviteUrl, shareInvite, useCopy } from "./share";
 
@@ -86,8 +86,21 @@ export function Lobby({
 						onClick={() => copy(inviteUrl(code), "link")}
 						className={`${btn.primary} ${btn.md} px-4 text-[15px]`}
 					>
-						<I icon={copied ? IconCheck : IconLink} />
-						{copied ? "Copied" : "Copy invite link"}
+						<SwapLabel
+							on={copied !== null}
+							idle={
+								<>
+									<I icon={IconLink} />
+									Copy invite link
+								</>
+							}
+							done={
+								<>
+									<I icon={IconCheck} />
+									Copied
+								</>
+							}
+						/>
 					</button>
 					{share && (
 						<button

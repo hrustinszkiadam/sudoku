@@ -2,7 +2,7 @@ import { IconCheck, IconLink, IconShare2 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import type { Difficulty, Mode } from "../../types";
 import { Sheet } from "../Sheet";
-import { btn, I, Overline } from "../ui";
+import { btn, I, Overline, SwapLabel } from "../ui";
 import { modeLabel } from "./RoomBar";
 import { canShare, inviteUrl, shareInvite, useCopy } from "./share";
 
@@ -33,8 +33,21 @@ export function InviteCard({ code }: { code: string }) {
 					onClick={() => copy(url, "link")}
 					className="flex h-11 items-center justify-center gap-2 rounded-md bg-white text-[15px] font-extrabold text-[#2841B9] active:translate-y-px"
 				>
-					<I icon={copied ? IconCheck : IconLink} />
-					{copied ? "Copied" : "Copy link"}
+					<SwapLabel
+						on={copied !== null}
+						idle={
+							<>
+								<I icon={IconLink} />
+								Copy link
+							</>
+						}
+						done={
+							<>
+								<I icon={IconCheck} />
+								Copied
+							</>
+						}
+					/>
 				</button>
 				{share && (
 					<button
@@ -104,8 +117,21 @@ export function InviteSheet({
 				onClick={() => copy(inviteUrl(code), "link")}
 				className={`${share ? btn.secondary : btn.primary} ${btn.lg}`}
 			>
-				<I icon={copied ? IconCheck : IconLink} />
-				{copied ? "Copied" : "Copy link"}
+				<SwapLabel
+					on={copied !== null}
+					idle={
+						<>
+							<I icon={IconLink} />
+							Copy link
+						</>
+					}
+					done={
+						<>
+							<I icon={IconCheck} />
+							Copied
+						</>
+					}
+				/>
 			</button>
 			<button
 				type="button"

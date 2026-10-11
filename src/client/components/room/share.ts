@@ -20,8 +20,19 @@ export function useCopy<K extends string>() {
 	return { copied, copy };
 }
 
-export const canShare = () =>
-	typeof navigator !== "undefined" && typeof navigator.share === "function";
+/**
+ * Web Share where it actually opens a share sheet. Chrome on macOS exposes
+ * navigator.share, but its promise never settles and no sheet appears, so
+ * Chromium on macOS gets the copy button only (Safari's share sheet works).
+ */
+export const canShare = () => {
+	if (typeof navigator === "undefined" || typeof navigator.share !== "function")
+		return false;
+	const ua = (
+		navigator as Navigator & { userAgentData?: { platform?: string } }
+	).userAgentData;
+	return ua?.platform !== "macOS";
+};
 
 /** Web Share API; returns false when unavailable so callers can copy instead. */
 export async function shareInvite(code: string): Promise<boolean> {
@@ -32,8 +43,11 @@ export async function shareInvite(code: string): Promise<boolean> {
 			text: `Join my sudoku room ${code}`,
 			url: inviteUrl(code),
 		});
-	} catch {
-		// Dismissed by the user: nothing to do.
+	} catch (err) {
+		// Dismissed by the user: nothing to do. Anything else: copy instead.
+		if (!(err instanceof DOMException && err.name === "AbortError")) {
+			await navigator.clipboard.writeText(inviteUrl(code)).catch(() => {});
+		}
 	}
 	return true;
 }

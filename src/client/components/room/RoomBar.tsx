@@ -10,7 +10,7 @@ import {
 } from "@tabler/icons-react";
 import { Link } from "react-router";
 import type { Difficulty, Mode } from "../../types";
-import { btn, I, Overline } from "../ui";
+import { btn, btnBase, I, Overline, SwapLabel } from "../ui";
 import { inviteUrl, useCopy } from "./share";
 
 export const modeLabel = (mode: Mode, difficulty: Difficulty) =>
@@ -87,14 +87,27 @@ export function RoomBar({
 					<button
 						type="button"
 						onClick={() => copy(inviteUrl(code), "link")}
-						className={`${btn.sm} w-full ${
+						className={`${btnBase} ${btn.sm} border ${
 							copied === "link"
-								? "border border-success bg-success-soft text-success"
-								: btn.secondary
+								? "border-success bg-success-soft text-success"
+								: "border-line bg-surface text-ink hover:bg-sunken"
 						}`}
 					>
-						<I icon={copied === "link" ? IconCheck : IconLink} />
-						{copied === "link" ? "Copied" : "Copy invite link"}
+						<SwapLabel
+							on={copied === "link"}
+							idle={
+								<>
+									<I icon={IconLink} />
+									Copy invite link
+								</>
+							}
+							done={
+								<>
+									<I icon={IconCheck} />
+									Copied
+								</>
+							}
+						/>
 					</button>
 				</span>
 				<ModeChip mode={mode} difficulty={difficulty} />
