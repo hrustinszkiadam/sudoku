@@ -172,8 +172,8 @@ export function RaceLanes({
 								className="h-2 overflow-hidden rounded-full bg-sunken"
 							>
 								<span
-									className="block h-full rounded-full bg-(--pc) transition-[width] duration-400 ease-standard"
-									style={{ width: `${pct}%` }}
+									className="block h-full origin-left rounded-full bg-(--pc) transition-transform duration-400 ease-standard"
+									style={{ scale: `${pct / 100} 1` }}
 								/>
 							</div>
 						</li>
@@ -255,22 +255,23 @@ export function RaceTrack({
 		>
 			<span className="absolute top-[19px] right-[26px] left-0 h-[3px] rounded-full bg-hair" />
 			<span
-				className="absolute top-[19px] left-0 h-[3px] rounded-full bg-brand transition-[width] duration-400 ease-standard"
-				style={{
-					width: `calc((100% - 48px) * ${mine ? frac(mine) : 0} + 10px)`,
-				}}
+				className="absolute top-[19px] left-0 h-[3px] w-[calc(100%-38px)] origin-left rounded-full bg-brand transition-transform duration-400 ease-standard"
+				style={{ scale: `${mine ? frac(mine) : 0} 1` }}
 			/>
 			<I icon={IconFlag} className="absolute top-2.5 right-0 text-ink-2" />
 			{marks.map(({ p, at }) => (
+				// The lane is the track minus the flag; translate % is of the lane.
 				<span
 					key={p.userId}
-					style={{
-						...pencilStyle(p.pencil),
-						left: `calc((100% - 48px) * ${Math.min(at, 100) / 100})`,
-					}}
-					className={`absolute top-2.5 flex size-5 items-center justify-center rounded-xs bg-(--pc) text-[11px] font-extrabold text-(--pc-on) transition-[left] duration-400 ease-standard ${p.userId === me ? "shadow-[0_0_0_2px_var(--color-bg),0_0_0_4px_var(--color-brand)]" : "shadow-[0_0_0_2px_var(--color-bg)]"} ${p.connected ? "" : "opacity-55"}`}
+					style={{ translate: `${Math.min(at, 100)}% 0` }}
+					className="absolute top-2.5 left-0 w-[calc(100%-48px)] transition-[translate] duration-400 ease-standard"
 				>
-					{initialOf(p.name)}
+					<span
+						style={pencilStyle(p.pencil)}
+						className={`flex size-5 items-center justify-center rounded-xs bg-(--pc) text-[11px] font-extrabold text-(--pc-on) ${p.userId === me ? "shadow-[0_0_0_2px_var(--color-bg),0_0_0_4px_var(--color-brand)]" : "shadow-[0_0_0_2px_var(--color-bg)]"} ${p.connected ? "" : "opacity-55"}`}
+					>
+						{initialOf(p.name)}
+					</span>
 				</span>
 			))}
 		</div>

@@ -287,7 +287,7 @@ function NewGame() {
 						aria-invalid={codeError}
 						aria-describedby={codeError ? "room-code-error" : undefined}
 						className={`${field} h-[52px] min-w-0 flex-1 font-mono text-[22px] font-bold tracking-[0.3em] uppercase placeholder:font-bold placeholder:text-ink-3/60`}
-						placeholder="K7QM4R"
+						placeholder="K7QM4R…"
 						autoComplete="off"
 						autoCapitalize="characters"
 						spellCheck={false}
