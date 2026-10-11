@@ -24,6 +24,11 @@ export interface Meta {
 	startsAt: number | null;
 	startedAt: number | null;
 	finishedAt: number | null;
+	/**
+	 * Co-op: when the last player left a running game. The clock is paused
+	 * while set; on return `startedAt` moves forward by the time away.
+	 */
+	pausedAt: number | null;
 	lastActivityAt: number;
 }
 
@@ -61,6 +66,7 @@ const META_COLUMNS = {
 	startsAt: "starts_at",
 	startedAt: "started_at",
 	finishedAt: "finished_at",
+	pausedAt: "paused_at",
 	lastActivityAt: "last_activity_at",
 } as const satisfies Record<keyof Meta, string>;
 
@@ -98,6 +104,7 @@ export function createTables(sql: SqlStorage): void {
 			starts_at INTEGER,
 			started_at INTEGER,
 			finished_at INTEGER,
+			paused_at INTEGER,
 			last_activity_at INTEGER NOT NULL
 		);
 		CREATE TABLE IF NOT EXISTS players (
@@ -116,6 +123,8 @@ export function createTables(sql: SqlStorage): void {
 	// Rooms created before hints existed.
 	addColumnIfMissing(sql, "meta", "hints", "INTEGER NOT NULL DEFAULT 0");
 	addColumnIfMissing(sql, "players", "hints", "INTEGER NOT NULL DEFAULT 0");
+	// Rooms created before the co-op clock paused when empty.
+	addColumnIfMissing(sql, "meta", "paused_at", "INTEGER");
 }
 
 function addColumnIfMissing(
@@ -157,6 +166,7 @@ function toMeta(r: Row): Meta {
 		startsAt: numOrNull(r.starts_at),
 		startedAt: numOrNull(r.started_at),
 		finishedAt: numOrNull(r.finished_at),
+		pausedAt: numOrNull(r.paused_at),
 		lastActivityAt: num(r.last_activity_at),
 	};
 }

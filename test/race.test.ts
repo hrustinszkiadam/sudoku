@@ -248,6 +248,18 @@ describe("race play", () => {
 		expect(over.results.every((r) => r.rank === null)).toBe(true);
 	});
 
+	it("keeps one shared clock: an empty race never pauses", async () => {
+		const { code, a, b } = await lobby();
+		await startNow(code, a, b);
+		await a.close();
+		await b.close();
+		const meta = await runInDurableObject(
+			env.GAME_ROOM.getByName(code),
+			(room: GameRoom) => room.meta,
+		);
+		expect(meta.pausedAt).toBeNull();
+	});
+
 	it("the alarm ends a race after 2 hours", async () => {
 		const { code, a, b } = await lobby();
 		a.send({ type: "start" });

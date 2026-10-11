@@ -207,6 +207,7 @@ export class GameRoom extends DurableObject<Env> implements Room {
 			// Co-op starts the clock on the first move, race on the host's start.
 			startedAt: null,
 			finishedAt: null,
+			pausedAt: null,
 			lastActivityAt: now,
 		};
 		insertMeta(this.sql, meta);
@@ -307,7 +308,7 @@ export class GameRoom extends DurableObject<Env> implements Room {
 				finishedAt: null,
 			});
 		}
-		this.setMeta({ lastActivityAt: now });
+		this.setMeta({ lastActivityAt: now, ...this.resumeClock(now) });
 
 		this.send(server, this.toClientSnapshot(userId));
 		const player = this.toClientPlayers().find((p) => p.userId === userId);
@@ -382,7 +383,12 @@ export class GameRoom extends DurableObject<Env> implements Room {
 		// A newer tab for the same user keeps them connected.
 		if (this.sockets(me.userId).some((w) => w !== ws)) return;
 		updatePlayer(this.sql, me.userId, { connected: false });
-		this.setMeta({ lastActivityAt: this.now() });
+		const now = this.now();
+		const empty = !this.sockets().some((w) => w !== ws);
+		this.setMeta({
+			lastActivityAt: now,
+			...(empty && this.clockRunning() ? { pausedAt: now } : {}),
+		});
 		this.broadcast({ type: "player_left", userId: me.userId }, ws);
 		console.log({
 			event: "player_left",
@@ -391,6 +397,32 @@ export class GameRoom extends DurableObject<Env> implements Room {
 		});
 		// A race also ends when everyone still connected has finished.
 		await endIfEveryoneFinished(this);
+	}
+
+	/**
+	 * Co-op clocks only count time with someone in the room. A race keeps one
+	 * shared clock for everybody, so it never pauses.
+	 */
+	private clockRunning(): boolean {
+		const m = this.meta;
+		return (
+			m.mode === "coop" &&
+			m.status === "playing" &&
+			m.startedAt !== null &&
+			m.pausedAt === null
+		);
+	}
+
+	/** On return, shift the start by the time away so elapsed time skips it. */
+	private resumeClock(now: number): Partial<Meta> {
+		const { startedAt, pausedAt } = this.meta;
+		if (pausedAt === null) return {};
+		return {
+			pausedAt: null,
+			...(startedAt !== null
+				? { startedAt: startedAt + Math.max(0, now - pausedAt) }
+				: {}),
+		};
 	}
 
 	/** Per-connection token bucket: burst 20, refill 10/s. */
@@ -464,7 +496,8 @@ export class GameRoom extends DurableObject<Env> implements Room {
 		try {
 			await recordGame(
 				this.env.DB,
-				{ ...this.meta, finishedAt: this.now() },
+				// A paused room's time stops where everyone left.
+				{ ...this.meta, finishedAt: this.meta.pausedAt ?? this.now() },
 				buildResults(this.meta, players),
 				"abandoned",
 			);

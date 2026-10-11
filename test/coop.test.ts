@@ -1,3 +1,4 @@
+import { runInDurableObject } from "cloudflare:test";
 import { env } from "cloudflare:workers";
 import {
 	afterEach,
@@ -9,6 +10,7 @@ import {
 	vi,
 } from "vitest";
 import { EASY } from "../src/shared/sudoku/fixtures";
+import type { GameRoom } from "../src/worker/room/GameRoom";
 import { createRoom } from "../src/worker/routes/rooms";
 import {
 	api,
@@ -420,6 +422,57 @@ describe("co-op play", () => {
 		const late = await connect(code, await newGuest());
 		expect((await late.next("snapshot")).startedAt).toBe(started.startedAt);
 		expect(await a.none("status")).toBe(true);
+	});
+
+	it("pauses the clock while the room is empty and resumes on return", async () => {
+		const host = await newGuest();
+		const friend = await newGuest();
+		const code = await createRoomFor(host);
+		const stub = env.GAME_ROOM.getByName(code);
+		const meta = () => runInDurableObject(stub, (room: GameRoom) => room.meta);
+
+		const a = await connect(code, host);
+		await a.next("snapshot");
+		const b = await connect(code, friend);
+		await b.next("snapshot");
+		a.send({ type: "note", cell: CELL, digit: 1 });
+		const { startedAt } = await a.next("status");
+
+		// One player leaving keeps the clock running for the other.
+		await b.close();
+		await a.next("player_left");
+		expect((await meta()).pausedAt).toBeNull();
+
+		// The last one out pauses it.
+		await a.close();
+		await vi.waitFor(async () =>
+			expect((await meta()).pausedAt).not.toBeNull(),
+		);
+
+		// Pretend everyone was away for an hour.
+		const HOUR = 60 * 60 * 1000;
+		await runInDurableObject(stub, (room: GameRoom) => {
+			room.setMeta({ pausedAt: (room.meta.pausedAt ?? 0) - HOUR });
+		});
+		const back = await connect(code, host);
+		const snap = await back.next("snapshot");
+		// The hour away doesn't count: the start moves forward by it.
+		expect(snap.startedAt).toBeGreaterThanOrEqual((startedAt ?? 0) + HOUR);
+		expect(snap.startedAt).toBeLessThan((startedAt ?? 0) + HOUR + 10_000);
+		expect((await meta()).pausedAt).toBeNull();
+	});
+
+	it("never pauses before the first move", async () => {
+		const host = await newGuest();
+		const code = await createRoomFor(host);
+		const a = await connect(code, host);
+		await a.next("snapshot");
+		await a.close();
+		const m = await runInDurableObject(
+			env.GAME_ROOM.getByName(code),
+			(room: GameRoom) => room.meta,
+		);
+		expect(m).toMatchObject({ startedAt: null, pausedAt: null });
 	});
 
 	it("a wrong first digit also starts the clock", async () => {
