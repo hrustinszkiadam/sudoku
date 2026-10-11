@@ -82,3 +82,33 @@ test("hints reveal a cell and note edits can be undone", async ({ page }) => {
 	await page.keyboard.press("ControlOrMeta+z");
 	await expect(cell(page, empty[1])).toHaveAttribute("aria-label", /empty$/);
 });
+
+test("copy code copies just the code; the clock waits for the first move", async ({
+	browser,
+}) => {
+	const context = await browser.newContext({
+		permissions: ["clipboard-read", "clipboard-write"],
+	});
+	const page = await context.newPage();
+	const code = await createRoom(page);
+
+	await page.getByRole("button", { name: "Copy code" }).click();
+	expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(code);
+	await page.getByRole("button", { name: "Copy invite link" }).click();
+	expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(
+		new RegExp(`/r/${code}$`),
+	);
+
+	// Waiting for friends: the clock stays at 0:00.
+	await expect(page.getByText("starts with the first move")).toBeVisible();
+	await page.waitForTimeout(2200);
+	await expect(page.getByText(/Elapsed time\s*0:00/)).toBeVisible();
+
+	const empty = (await readBoard(page)).indexOf("0");
+	await cell(page, empty).click();
+	await page.keyboard.press("Shift+Digit1");
+	await expect(page.getByText("starts with the first move")).toBeHidden();
+	await expect(page.getByText(/Elapsed time\s*0:0[1-9]/)).toBeVisible({
+		timeout: 5000,
+	});
+});

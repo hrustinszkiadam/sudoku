@@ -115,7 +115,7 @@ function useNow(active: boolean, intervalMs = 250) {
 
 function RoomView({ code, store }: { code: string; store: RoomStore }) {
 	const s = useStore(store);
-	const [copied, setCopied] = useState(false);
+	const [copied, setCopied] = useState<"code" | "link" | null>(null);
 	const race = s.mode === "race";
 	const isHost = s.me === s.hostId;
 	usePageMeta({
@@ -159,15 +159,19 @@ function RoomView({ code, store }: { code: string; store: RoomStore }) {
 	const done = useMemo(() => completedDigits(s.board), [s.board]);
 	const toFill = 81 - countFilled(s.givens);
 
-	const copyInvite = async () => {
+	const copy = async (what: "code" | "link") => {
 		try {
-			await navigator.clipboard.writeText(`${location.origin}/r/${code}`);
-			setCopied(true);
-			setTimeout(() => setCopied(false), 2000);
+			await navigator.clipboard.writeText(
+				what === "code" ? code : `${location.origin}/r/${code}`,
+			);
+			setCopied(what);
+			setTimeout(() => setCopied((c) => (c === what ? null : c)), 2000);
 		} catch {
-			setCopied(false);
+			setCopied(null);
 		}
 	};
+	const copyButton =
+		"rounded-md border border-slate-300 px-2 py-1 text-xs dark:border-slate-600";
 
 	if (!s.loaded) {
 		return (
@@ -184,28 +188,43 @@ function RoomView({ code, store }: { code: string; store: RoomStore }) {
 		<main className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-4 md:flex-row md:items-start">
 			<div className="flex w-full flex-col items-center gap-3 md:max-w-[32rem]">
 				<div className="flex w-full flex-wrap items-center justify-between gap-2 text-sm">
-					<div className="flex items-center gap-2">
+					<div className="flex flex-wrap items-center gap-2">
 						<h1 className="font-mono text-lg font-bold tracking-widest">
 							{code}
 						</h1>
 						<button
 							type="button"
-							onClick={copyInvite}
-							className="rounded-md border border-slate-300 px-2 py-1 text-xs dark:border-slate-600"
+							onClick={() => copy("code")}
+							className={copyButton}
 						>
-							{copied ? "✓ Copied" : "Copy invite link"}
+							{copied === "code" ? "✓ Copied" : "Copy code"}
+						</button>
+						<button
+							type="button"
+							onClick={() => copy("link")}
+							className={copyButton}
+						>
+							{copied === "link" ? "✓ Copied" : "Copy invite link"}
 						</button>
 					</div>
-					<span className="rounded bg-slate-200 px-2 py-0.5 capitalize dark:bg-slate-700">
-						{race ? "Race" : "Co-op"} · {s.difficulty}
+					<span className="rounded bg-slate-200 px-2 py-0.5 dark:bg-slate-700">
+						{race ? "Race" : "Co-op"} ·{" "}
+						<span className="capitalize">{s.difficulty}</span>
 					</span>
 				</div>
 
 				<div className="flex w-full items-center justify-between text-sm">
-					<Timer
-						from={race ? s.startsAt : s.startedAt}
-						to={s.status === "finished" ? s.finishedAt : null}
-					/>
+					<span>
+						<Timer
+							from={race ? s.startsAt : s.startedAt}
+							to={s.status === "finished" ? s.finishedAt : null}
+						/>
+						{!race && s.status === "playing" && s.startedAt === null && (
+							<span className="ml-1 text-xs text-slate-500 dark:text-slate-400">
+								· starts with the first move
+							</span>
+						)}
+					</span>
 					<span aria-live="polite">
 						{race ? "Your mistakes" : "Mistakes"}: <strong>{s.mistakes}</strong>
 						{s.hints > 0 && (
