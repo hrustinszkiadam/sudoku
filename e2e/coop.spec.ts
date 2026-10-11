@@ -40,7 +40,7 @@ test("two players create, join and finish a co-op game", async ({
 	// A wrong digit counts as a mistake for everyone.
 	const wrong = answer[empty[1]] === "1" ? "2" : "1";
 	await alice.keyboard.press(wrong);
-	await expect(bob.getByText(/Mistakes:\s*1/)).toBeVisible();
+	await expect(bob.getByText(/Mistakes\s*1/)).toBeVisible();
 
 	// Take turns to finish the board.
 	for (const [n, i] of empty.slice(1).entries()) {
@@ -58,7 +58,8 @@ test("solo play works as a one-person co-op room", async ({ page }) => {
 	for (let i = 0; i < 81; i++) {
 		if (board[i] === "0") await placeDigit(page, i, answer[i]);
 	}
-	await expect(page.getByText("Solved together!")).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Solved!" })).toBeVisible();
+	await expect(page.getByText("Team time")).toBeVisible();
 });
 
 test("hints reveal a cell and note edits can be undone", async ({ page }) => {
@@ -74,7 +75,7 @@ test("hints reveal a cell and note edits can be undone", async ({ page }) => {
 		"aria-label",
 		new RegExp(`column \\d, ${answer[empty[0]]}`),
 	);
-	await expect(page.getByText(/Hints:\s*1/)).toBeVisible();
+	await expect(page.getByText(/Hints\s*1/)).toBeVisible();
 
 	await cell(page, empty[1]).click();
 	await page.keyboard.press("Shift+Digit3");

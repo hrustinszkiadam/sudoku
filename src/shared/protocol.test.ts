@@ -70,7 +70,7 @@ describe("server messages", () => {
 				{
 					userId: "u1",
 					name: "Otter-1234",
-					color: "#e11d48",
+					pencil: 1,
 					connected: true,
 					selected: null,
 					placements: 0,
@@ -78,6 +78,7 @@ describe("server messages", () => {
 					hints: 0,
 					filled: 0,
 					finished: false,
+					finishMs: null,
 				},
 			],
 			mistakes: 0,

@@ -13,20 +13,21 @@ export const formatMs = (ms: number): string => {
 export function Timer({
 	from,
 	to,
+	className = "",
 }: {
 	from: number | null;
 	to: number | null;
+	className?: string;
 }) {
 	const [now, setNow] = useState(() => Date.now());
 	useEffect(() => {
-		if (to !== null) return;
+		if (to !== null || from === null) return;
 		const id = setInterval(() => setNow(Date.now()), 1000);
 		return () => clearInterval(id);
-	}, [to]);
+	}, [from, to]);
 	const elapsed = from === null ? 0 : (to ?? now) - from;
 	return (
-		<span className="font-mono tabular-nums">
-			<span aria-hidden>⏱ </span>
+		<span className={`font-mono font-bold tabular ${className}`}>
 			<span className="sr-only">Elapsed time </span>
 			{formatMs(elapsed)}
 		</span>

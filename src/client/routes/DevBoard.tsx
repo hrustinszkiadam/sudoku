@@ -23,8 +23,8 @@ export function DevBoard() {
 
 	return (
 		<main className="mx-auto flex max-w-lg flex-col items-center gap-4 px-4 py-6">
-			<h1 className="text-xl font-bold">Dev board</h1>
-			<p className="text-sm text-slate-500" aria-live="polite">
+			<h1 className="font-display text-2xl font-extrabold">Dev board</h1>
+			<p className="text-sm text-ink-2" aria-live="polite">
 				{solved ? "Solved!" : `${conflicts(game.board).size} conflicting cells`}
 			</p>
 			<Board

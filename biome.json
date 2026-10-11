@@ -12,7 +12,9 @@
 			"!worker-configuration.d.ts",
 			"!seeds",
 			"!migrations/meta",
-			"!PLAN.md"
+			"!PLAN.md",
+			"!design",
+			"!.claude"
 		]
 	},
 	"formatter": {

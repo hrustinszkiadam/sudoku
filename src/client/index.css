@@ -1,10 +1,243 @@
 @import "tailwindcss";
+@import "@fontsource-variable/bricolage-grotesque/opsz.css";
+@import "@fontsource-variable/atkinson-hyperlegible-next";
+@import "@fontsource-variable/atkinson-hyperlegible-mono";
+@import "./theme.css";
 
 @layer base {
 	html {
 		color-scheme: light dark;
+		-webkit-tap-highlight-color: transparent;
 	}
 	body {
-		@apply min-h-dvh bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+		@apply min-h-dvh bg-bg font-sans text-ink antialiased;
 	}
+	:focus-visible {
+		outline: 2px solid var(--color-focus);
+		outline-offset: 2px;
+	}
+	button:not(:disabled),
+	[role="button"]:not(:disabled) {
+		cursor: pointer;
+	}
+}
+
+/* Hover effects only where a precise pointer can hover (not on touch). */
+@custom-variant can-hover (@media (hover: hover) and (pointer: fine));
+
+@utility tabular {
+	font-variant-numeric: tabular-nums slashed-zero;
+}
+
+/* Global loading: tiles fill in a diagonal wave (static under reduced motion). */
+@keyframes tile-wave {
+	0%,
+	60%,
+	100% {
+		background-color: var(--color-surface);
+	}
+	20% {
+		background-color: var(--color-brand);
+	}
+	35% {
+		background-color: var(--color-accent);
+	}
+}
+@media (prefers-reduced-motion: no-preference) {
+	.tile-wave {
+		animation: tile-wave 1.6s var(--ease-standard) infinite;
+	}
+}
+
+/* Board: keyboard focus ring sits outside the cell, never a fill. */
+.cell:focus-visible {
+	outline: none;
+	z-index: 2;
+}
+.cell:focus-visible::after {
+	content: "";
+	position: absolute;
+	inset: -4px;
+	border-radius: 6px;
+	pointer-events: none;
+	z-index: 3;
+	border: 2px solid var(--color-focus);
+	box-shadow:
+		0 0 0 2px var(--color-surface),
+		inset 0 0 0 2px var(--color-surface);
+}
+@container (min-width: 420px) {
+	.digit-conflict {
+		text-decoration-thickness: 2px;
+		text-underline-offset: 6px;
+	}
+}
+
+/* Mistake: the digit shakes, never the cell or the grid lines. */
+@keyframes digit-shake {
+	0%,
+	100% {
+		translate: 0;
+	}
+	20%,
+	60% {
+		translate: -3px;
+	}
+	40%,
+	80% {
+		translate: 3px;
+	}
+}
+/* A teammate's digit pops in; their ring fades over 600 ms. */
+@keyframes digit-arrive {
+	0% {
+		scale: 0.6;
+		opacity: 0;
+	}
+	60% {
+		scale: 1.08;
+		opacity: 1;
+	}
+	100% {
+		scale: 1;
+	}
+}
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes ring-fade {
+	0%,
+	40% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
+}
+@media (prefers-reduced-motion: no-preference) {
+	.digit-shake {
+		animation: digit-shake 240ms var(--ease-standard) 2;
+	}
+	.digit-arrive {
+		animation: digit-arrive 220ms var(--ease-settle);
+	}
+	.ring-fade {
+		animation: ring-fade 600ms var(--ease-out) forwards;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.digit-arrive {
+		animation: fade-in 120ms var(--ease-out);
+	}
+}
+
+/* Arrivals: banners slide down, sheets rise, results rise 24 px. */
+@keyframes slide-down {
+	from {
+		translate: 0 -100%;
+	}
+}
+@keyframes rise {
+	from {
+		translate: 0 24px;
+		opacity: 0;
+	}
+}
+@keyframes sheet-up {
+	from {
+		translate: 0 40px;
+		opacity: 0;
+	}
+}
+@keyframes count-in {
+	from {
+		scale: 1.3;
+		opacity: 0;
+	}
+}
+@keyframes pop {
+	0% {
+		scale: 0.4;
+	}
+	60% {
+		scale: 1.2;
+	}
+	100% {
+		scale: 1;
+	}
+}
+@keyframes spin {
+	to {
+		rotate: 360deg;
+	}
+}
+@keyframes confetti-fall {
+	from {
+		translate: 0 -160px;
+		opacity: 0;
+	}
+	20% {
+		opacity: 0.9;
+	}
+}
+@keyframes podium-rise {
+	from {
+		scale: 1 0;
+	}
+}
+@keyframes cell-wave {
+	0%,
+	100% {
+		background-color: var(--color-cell);
+	}
+	40% {
+		background-color: var(--color-success-soft);
+	}
+}
+@media (prefers-reduced-motion: no-preference) {
+	.banner-in {
+		animation: slide-down var(--duration-base) var(--ease-out);
+	}
+	.results-rise {
+		animation: rise var(--duration-slow) var(--ease-out) both;
+	}
+	.sheet[open] {
+		animation: sheet-up var(--duration-base) var(--ease-out);
+	}
+	.count-in {
+		animation: count-in var(--duration-base) var(--ease-out);
+	}
+	.check-pop {
+		animation: pop 240ms var(--ease-settle);
+	}
+	.spin-slow {
+		animation: spin 1.2s linear infinite;
+	}
+	.confetti {
+		animation: confetti-fall 1.2s var(--ease-out) both;
+	}
+	.podium-rise {
+		transform-origin: bottom;
+		animation: podium-rise var(--duration-slow) var(--ease-out) both;
+	}
+	.cell-wave {
+		animation: cell-wave 600ms var(--ease-standard) both;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.results-rise {
+		animation: fade-in var(--duration-base) var(--ease-out);
+	}
+}
+
+/* Mistakes counter: one colour pulse when it ticks up. */
+@keyframes tick {
+	from {
+		color: var(--color-danger);
+	}
+}
+.tick {
+	animation: tick 600ms var(--ease-out);
 }

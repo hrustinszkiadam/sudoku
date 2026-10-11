@@ -7,7 +7,7 @@ import {
 	MAX_MESSAGE_BYTES,
 	MAX_PLAYERS,
 	type Mode,
-	PLAYER_COLORS,
+	PENCIL_COUNT,
 	RACE_MAX_DURATION_MS,
 	RATE_BURST,
 	RATE_REFILL_PER_SEC,
@@ -291,11 +291,13 @@ export class GameRoom extends DurableObject<Env> implements Room {
 		if (existing) {
 			updatePlayer(this.sql, userId, { name, connected: true });
 		} else {
-			const used = new Set(players.map((p) => p.color));
+			const used = new Set(players.map((p) => p.pencil));
+			let pencil = 1;
+			while (used.has(pencil) && pencil < PENCIL_COUNT) pencil++;
 			insertPlayer(this.sql, {
 				userId,
 				name,
-				color: PLAYER_COLORS.find((c) => !used.has(c)) ?? PLAYER_COLORS[0],
+				pencil,
 				joinedAt: now,
 				connected: true,
 				placements: 0,
@@ -489,7 +491,7 @@ export class GameRoom extends DurableObject<Env> implements Room {
 		return rows.map((p) => ({
 			userId: p.userId,
 			name: p.name,
-			color: p.color,
+			pencil: p.pencil,
 			connected: p.connected,
 			selected: race ? null : (selected.get(p.userId) ?? null),
 			placements: p.placements,
@@ -497,6 +499,10 @@ export class GameRoom extends DurableObject<Env> implements Room {
 			hints: p.hints,
 			filled: p.placements + p.hints,
 			finished: race ? p.finishedAt !== null : this.meta.status === "finished",
+			finishMs:
+				race && p.finishedAt !== null && this.meta.startsAt !== null
+					? p.finishedAt - this.meta.startsAt
+					: null,
 		}));
 	}
 

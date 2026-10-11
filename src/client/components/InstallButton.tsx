@@ -1,4 +1,6 @@
+import { IconDownload } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
+import { I } from "./ui";
 
 /** Chrome/Edge/Android event fired when the PWA can be installed. */
 interface BeforeInstallPromptEvent extends Event {
@@ -28,14 +30,16 @@ export function InstallButton() {
 	return (
 		<button
 			type="button"
-			className="rounded-md border border-slate-300 px-2 py-0.5 text-xs dark:border-slate-600"
+			aria-label="Install app"
+			className="flex size-10 items-center justify-center gap-2 rounded-md text-[15px] font-bold text-ink-2 hover:bg-sunken hover:text-ink active:translate-y-px md:w-auto md:border md:border-line md:bg-surface md:px-3.5 md:text-ink"
 			onClick={async () => {
 				await event.prompt();
 				await event.userChoice;
 				setEvent(null);
 			}}
 		>
-			Install app
+			<I icon={IconDownload} />
+			<span className="hidden md:inline">Install app</span>
 		</button>
 	);
 }

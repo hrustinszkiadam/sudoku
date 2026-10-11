@@ -54,7 +54,9 @@ async function lobby(): Promise<{
 	const snap = await a.next("snapshot");
 	expect(snap).toMatchObject({ mode: "race", status: "lobby", startsAt: null });
 	const b = await connect(code, guest);
-	await b.next("snapshot");
+	const bSnap = await b.next("snapshot");
+	// Pencils go out in join order.
+	expect(bSnap.players.map((p) => p.pencil)).toEqual([1, 2]);
 	await a.next("player_joined");
 	return { code, host, guest, a, b };
 }
@@ -171,7 +173,8 @@ describe("race play", () => {
 	});
 
 	it("scores finishers, ranks them and records the race in D1", async () => {
-		const { code, host, guest, a, b } = await lobby();
+		const { code, host, guest, b, ...rest } = await lobby();
+		let { a } = rest;
 		await startNow(code, a, b);
 
 		b.send({ type: "place", cell: 1, digit: wrong(1) });
@@ -182,6 +185,15 @@ describe("race play", () => {
 		expect(aFinished.userId).toBe(host.userId);
 		expect(aFinished.scoreMs).toBeGreaterThanOrEqual(0);
 		expect(aFinished.scoreMs).toBeLessThan(10_000);
+		expect(aFinished.finishMs).toBe(aFinished.scoreMs);
+
+		// Reconnecting clients see the finish time on the player too.
+		const c = await connect(code, host);
+		const again = await c.next("snapshot");
+		expect(again.players.find((p) => p.userId === host.userId)?.finishMs).toBe(
+			aFinished.finishMs,
+		);
+		a = c;
 
 		// A finished; B is still playing, so no game over yet.
 		expect(await a.none("game_over")).toBe(true);

@@ -30,7 +30,8 @@ export interface Meta {
 export interface PlayerRow {
 	userId: string;
 	name: string;
-	color: string;
+	/** Pencil 1-8, stored in the legacy `color` column. */
+	pencil: number;
 	joinedAt: number;
 	connected: boolean;
 	placements: number;
@@ -66,7 +67,7 @@ const META_COLUMNS = {
 const PLAYER_COLUMNS = {
 	userId: "user_id",
 	name: "name",
-	color: "color",
+	pencil: "color",
 	joinedAt: "joined_at",
 	connected: "connected",
 	placements: "placements",
@@ -160,11 +161,29 @@ function toMeta(r: Row): Meta {
 	};
 }
 
+/** Hex colours from before pencils, in their old join order. */
+const LEGACY_COLORS = [
+	"#e11d48",
+	"#2563eb",
+	"#16a34a",
+	"#d97706",
+	"#9333ea",
+	"#0891b2",
+	"#db2777",
+	"#65a30d",
+];
+
+function toPencil(value: unknown): number {
+	const n = Number(value);
+	if (Number.isInteger(n) && n >= 1 && n <= 8) return n;
+	return LEGACY_COLORS.indexOf(String(value)) + 1 || 1;
+}
+
 function toPlayer(r: Row): PlayerRow {
 	return {
 		userId: String(r.user_id),
 		name: String(r.name),
-		color: String(r.color),
+		pencil: toPencil(r.color),
 		joinedAt: num(r.joined_at),
 		connected: num(r.connected) === 1,
 		placements: num(r.placements),

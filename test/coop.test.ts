@@ -180,7 +180,7 @@ describe("co-op play", () => {
 		expect(snap.players).toHaveLength(1);
 		expect(snap.players[0]).toMatchObject({
 			connected: true,
-			color: "#e11d48",
+			pencil: 1,
 		});
 		expect(JSON.stringify(snap)).not.toContain(EASY.solution);
 	});

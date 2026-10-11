@@ -84,7 +84,7 @@ test.describe("touch", () => {
 		await expect(cell(page, 2)).toHaveAttribute("aria-label", /column 3, 4/);
 
 		await cell(page, 3).tap();
-		await page.getByRole("button", { name: /Notes off/ }).tap();
+		await page.getByRole("button", { name: /Notes off/i }).tap();
 		await page.getByRole("button", { name: "Toggle note 6" }).tap();
 		await expect(cell(page, 3)).toHaveAttribute("aria-label", /notes 6/);
 		await page.getByRole("button", { name: /Clear notes/ }).tap();

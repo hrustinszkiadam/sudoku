@@ -1,16 +1,35 @@
+import {
+	IconAlertTriangle,
+	IconCheck,
+	IconStopwatch,
+} from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { useStore } from "zustand";
-import { countFilled } from "../../shared/sudoku/grid";
+import { countFilled, digitAt } from "../../shared/sudoku/grid";
 import type { Notes } from "../../shared/sudoku/notes";
 import { isNotesArray } from "../../shared/sudoku/notes";
 import { Board, type OtherSelection } from "../components/Board";
 import { ConnectionBanner } from "../components/ConnectionBanner";
 import { completedDigits } from "../components/digits";
+import { HowToPlay, ShortcutSheet } from "../components/Help";
 import { NumberPad } from "../components/NumberPad";
-import { PlayerList } from "../components/PlayerList";
-import { Results } from "../components/Results";
+import { Countdown } from "../components/room/Countdown";
+import { InviteCard, InviteSheet } from "../components/room/Invite";
+import { Lobby } from "../components/room/Lobby";
+import { OnboardingTip } from "../components/room/OnboardingTip";
+import {
+	ordinal,
+	PlayersCard,
+	RaceLanes,
+	RaceTrack,
+	raceOrder,
+} from "../components/room/People";
+import { RoomResults } from "../components/room/Results";
+import { RoomBar, RoomExits } from "../components/room/RoomBar";
+import { Loading, StatePanel } from "../components/States";
 import { Timer } from "../components/Timer";
+import { btn, I } from "../components/ui";
 import { useBoardKeyboard } from "../components/useBoardKeyboard";
 import { usePageMeta } from "../meta";
 import { api, type RoomPreview } from "../net/api";
@@ -60,20 +79,28 @@ export function Room() {
 			.catch(() => setPreview("error"));
 	}, [code, session]);
 
-	if (!session || preview === null) {
-		return <p className="p-6 text-center text-slate-500">Loading…</p>;
-	}
+	if (!session || preview === null) return <Loading />;
 	if (preview === "error" || !preview.exists) {
 		return (
-			<main className="mx-auto flex max-w-md flex-col items-center gap-3 px-4 py-10 text-center">
-				<h1 className="text-xl font-bold">Room {code} not found</h1>
-				<p className="text-slate-500">
-					It may have expired after a day of inactivity.
-				</p>
-				<Link to="/" className="text-sky-600 underline">
-					Back home
-				</Link>
-			</main>
+			<StatePanel
+				mood="question"
+				title="Room not found"
+				actions={
+					<>
+						<Link to="/" className={`${btn.primary} ${btn.md}`}>
+							Back home
+						</Link>
+						<Link
+							to="/#new-game"
+							className="text-[15px] font-extrabold text-brand-strong underline underline-offset-2"
+						>
+							Start a new room
+						</Link>
+					</>
+				}
+			>
+				It may have expired after a day of inactivity.
+			</StatePanel>
 		);
 	}
 	return <RoomSession code={code} />;
@@ -103,21 +130,28 @@ function RoomSession({ code }: { code: string }) {
 	return <RoomView code={code} store={store} />;
 }
 
-function useNow(active: boolean, intervalMs = 250) {
+function useNow(active: boolean, intervalMs = 100) {
 	const [now, setNow] = useState(() => Date.now());
 	useEffect(() => {
 		if (!active) return;
+		setNow(Date.now());
 		const id = setInterval(() => setNow(Date.now()), intervalMs);
 		return () => clearInterval(id);
 	}, [active, intervalMs]);
 	return now;
 }
 
+/** How long "Go!" stays up after the countdown. */
+const GO_MS = 400;
+
+const phone = () =>
+	typeof matchMedia === "function" && matchMedia("(max-width: 767px)").matches;
+
 function RoomView({ code, store }: { code: string; store: RoomStore }) {
 	const s = useStore(store);
-	const [copied, setCopied] = useState<"code" | "link" | null>(null);
 	const race = s.mode === "race";
 	const isHost = s.me === s.hostId;
+	const [sheet, setSheet] = useState<"invite" | "help" | "keys" | null>(null);
 	usePageMeta({
 		title: s.loaded
 			? `${s.status === "finished" ? "Finished · " : ""}Room ${code} · ${race ? "Race" : "Co-op"}, ${s.difficulty}`
@@ -125,19 +159,30 @@ function RoomView({ code, store }: { code: string; store: RoomStore }) {
 		noindex: true,
 	});
 
-	const countingDown =
-		race &&
-		s.status === "playing" &&
-		s.startsAt !== null &&
-		s.startsAt > Date.now();
+	const startsAt = race && s.status === "playing" ? s.startsAt : null;
+	const countingDown = startsAt !== null && Date.now() < startsAt + GO_MS;
 	const now = useNow(countingDown);
-	const countdown =
-		countingDown && s.startsAt !== null
-			? Math.ceil((s.startsAt - now) / 1000)
-			: 0;
-	const canPlay = s.loaded && s.status === "playing" && countdown <= 0;
+	const msLeft = startsAt === null ? 0 : startsAt - now;
+	const showCountdown = startsAt !== null && msLeft > -GO_MS;
+	const replaced = s.conn === "replaced";
+	const canPlay =
+		s.loaded && s.status === "playing" && msLeft <= 0 && !replaced;
 
 	useBoardKeyboard(s, canPlay);
+
+	// "?" opens the shortcut sheet anywhere in the room.
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => {
+			const t = e.target as HTMLElement | null;
+			if (t?.closest("input, textarea, select, [contenteditable]")) return;
+			if (e.key === "?") {
+				e.preventDefault();
+				setSheet((v) => (v === "keys" ? null : "keys"));
+			}
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, []);
 
 	useEffect(() => {
 		if (!s.lastError) return;
@@ -145,195 +190,304 @@ function RoomView({ code, store }: { code: string; store: RoomStore }) {
 		return () => clearTimeout(id);
 	}, [s.lastError, store]);
 
+	// Phones: offer the invite once when you open a fresh co-op room alone.
+	const alone = s.players.length === 1;
+	useEffect(() => {
+		if (!s.loaded || race || !alone || !isHost || s.startedAt !== null) return;
+		const key = `sudoku:invited:${code}`;
+		try {
+			if (sessionStorage.getItem(key)) return;
+			sessionStorage.setItem(key, "1");
+		} catch {
+			return;
+		}
+		if (phone()) setSheet("invite");
+	}, [s.loaded, race, alone, isHost, s.startedAt, code]);
+
 	const others = useMemo<OtherSelection[]>(
 		() =>
 			s.players
 				.filter((p) => p.userId !== s.me && p.connected && p.selected !== null)
 				.map((p) => ({
 					cell: p.selected as number,
-					color: p.color,
+					pencil: p.pencil,
 					name: p.name,
 				})),
 		[s.players, s.me],
 	);
+	const recent = useMemo(() => {
+		const out = new Map<number, number>();
+		for (const [cell, by] of s.recent) {
+			const p = s.players.find((x) => x.userId === by);
+			if (p) out.set(cell, p.pencil);
+		}
+		return out;
+	}, [s.recent, s.players]);
 	const done = useMemo(() => completedDigits(s.board), [s.board]);
 	const toFill = 81 - countFilled(s.givens);
 
-	const copy = async (what: "code" | "link") => {
-		try {
-			await navigator.clipboard.writeText(
-				what === "code" ? code : `${location.origin}/r/${code}`,
-			);
-			setCopied(what);
-			setTimeout(() => setCopied((c) => (c === what ? null : c)), 2000);
-		} catch {
-			setCopied(null);
-		}
-	};
-	const copyButton =
-		"rounded-md border border-slate-300 px-2 py-1 text-xs dark:border-slate-600";
-
 	if (!s.loaded) {
 		return (
-			<main className="mx-auto flex max-w-md flex-col gap-3 px-4 py-6">
+			<>
 				<ConnectionBanner status={s.conn} />
-			</main>
+				<Loading />
+			</>
 		);
 	}
 
+	const finished = s.status === "finished";
 	const lobby = race && s.status === "lobby";
 	const connectedCount = s.players.filter((p) => p.connected).length;
+	const me = s.players.find((p) => p.userId === s.me);
+	const myResult = s.results?.find((r) => r.userId === s.me);
+
+	// Timer end: my own finish in a race, else the room's.
+	const myFinish =
+		race && me?.finished && me.finishMs !== null && s.startsAt !== null
+			? s.startsAt + me.finishMs
+			: null;
+	const timerEnd = myFinish ?? (finished ? s.finishedAt : null);
+	const myPlace =
+		myResult?.rank ??
+		raceOrder(s.players).findIndex((p) => p.userId === s.me) + 1;
+	const doneLabel = !race
+		? finished
+			? "Solved in"
+			: null
+		: me?.finished
+			? `Finished ${myPlace ? `${ordinal(myPlace)} ` : ""}in`
+			: null;
+	const waiting = !race && s.status === "playing" && s.startedAt === null;
+	const selectedEmpty =
+		s.selected !== null &&
+		digitAt(s.board, s.selected) === 0 &&
+		!s.pending.has(s.selected);
+
+	const sheets = (
+		<>
+			<InviteSheet
+				open={sheet === "invite"}
+				onClose={() => setSheet(null)}
+				code={code}
+				mode={s.mode}
+				difficulty={s.difficulty}
+			/>
+			<HowToPlay open={sheet === "help"} onClose={() => setSheet(null)} />
+			<ShortcutSheet open={sheet === "keys"} onClose={() => setSheet(null)} />
+		</>
+	);
+
+	const bar = (
+		<RoomBar
+			code={code}
+			mode={s.mode}
+			difficulty={s.difficulty}
+			onInvite={() => setSheet("invite")}
+			onHelp={() => setSheet("help")}
+		/>
+	);
+	const footer = (
+		<div className="mt-[18px] flex justify-center gap-2 md:hidden">
+			<RoomExits onHelp={() => setSheet("help")} />
+		</div>
+	);
+
+	if (replaced) {
+		return (
+			<>
+				<ConnectionBanner status={s.conn} />
+				<StatePanel
+					mood="locked"
+					title="Playing in another tab"
+					actions={
+						<button
+							type="button"
+							onClick={() => location.reload()}
+							className={`${btn.primary} ${btn.md}`}
+						>
+							Reload
+						</button>
+					}
+				>
+					Your progress is safe. Reload this tab to move the game here.
+				</StatePanel>
+			</>
+		);
+	}
 
 	return (
-		<main className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 py-4 md:flex-row md:items-start">
-			<div className="flex w-full flex-col items-center gap-3 md:max-w-[32rem]">
-				<div className="flex w-full flex-wrap items-center justify-between gap-2 text-sm">
-					<div className="flex flex-wrap items-center gap-2">
-						<h1 className="font-mono text-lg font-bold tracking-widest">
-							{code}
-						</h1>
-						<button
-							type="button"
-							onClick={() => copy("code")}
-							className={copyButton}
-						>
-							{copied === "code" ? "✓ Copied" : "Copy code"}
-						</button>
-						<button
-							type="button"
-							onClick={() => copy("link")}
-							className={copyButton}
-						>
-							{copied === "link" ? "✓ Copied" : "Copy invite link"}
-						</button>
-					</div>
-					<span className="rounded bg-slate-200 px-2 py-0.5 dark:bg-slate-700">
-						{race ? "Race" : "Co-op"} ·{" "}
-						<span className="capitalize">{s.difficulty}</span>
-					</span>
-				</div>
-
-				<div className="flex w-full items-center justify-between text-sm">
-					<span>
-						<Timer
-							from={race ? s.startsAt : s.startedAt}
-							to={s.status === "finished" ? s.finishedAt : null}
+		<>
+			<ConnectionBanner status={s.conn} />
+			<main className="mx-auto w-full max-w-[1280px] px-4 pb-7 md:px-8 lg:pb-10 xl:px-12">
+				{bar}
+				{lobby ? (
+					<div className="grid items-start gap-4 lg:grid-cols-[minmax(0,848px)_minmax(0,296px)] lg:gap-10">
+						<Lobby
+							code={code}
+							difficulty={s.difficulty}
+							connected={connectedCount}
+							isHost={isHost}
+							onStart={s.start}
 						/>
-						{!race && s.status === "playing" && s.startedAt === null && (
-							<span className="ml-1 text-xs text-slate-500 dark:text-slate-400">
-								· starts with the first move
-							</span>
-						)}
-					</span>
-					<span aria-live="polite">
-						{race ? "Your mistakes" : "Mistakes"}: <strong>{s.mistakes}</strong>
-						{s.hints > 0 && (
+						<PlayersCard
+							players={s.players}
+							me={s.me}
+							hostId={s.hostId}
+							lobby
+						/>
+					</div>
+				) : (
+					<div className="grid items-start gap-4 lg:grid-cols-[minmax(0,512px)_minmax(296px,1fr)] lg:gap-x-10 lg:gap-y-6 xl:grid-cols-[512px_296px_minmax(0,296px)]">
+						<div className="mx-auto w-full max-w-lg lg:row-span-2">
+							<div className="mb-2 flex h-8 items-center justify-between gap-3 lg:h-[34px]">
+								<div className="flex min-w-0 items-center gap-2">
+									{doneLabel ? (
+										<>
+											<I icon={IconCheck} className="text-success" />
+											<span className="text-[13px] font-bold whitespace-nowrap text-success lg:text-sm">
+												{doneLabel}
+											</span>
+										</>
+									) : (
+										<I icon={IconStopwatch} className="text-ink-2" />
+									)}
+									<Timer
+										from={race ? s.startsAt : s.startedAt}
+										to={timerEnd}
+										className="text-lg lg:text-[22px]"
+									/>
+									{waiting && (
+										<span className="truncate text-xs text-ink-3">
+											· starts with the first move
+										</span>
+									)}
+								</div>
+								<div
+									aria-live="polite"
+									className={`items-baseline gap-4 text-[13px] whitespace-nowrap text-ink-2 lg:text-sm ${waiting ? "hidden sm:flex" : "flex"}`}
+								>
+									<span className="flex items-baseline gap-1.5">
+										{race ? "Your mistakes" : "Mistakes"}
+										<strong
+											key={s.mistakes}
+											className={`font-mono text-[15px] lg:text-[17px] ${s.mistakes > 0 ? "tick" : ""}`}
+										>
+											{s.mistakes}
+										</strong>
+									</span>
+									{s.hints > 0 && (
+										<span className="flex items-baseline gap-1.5">
+											Hints
+											<strong className="font-mono text-[15px] lg:text-[17px]">
+												{s.hints}
+											</strong>
+										</span>
+									)}
+								</div>
+							</div>
+
+							{race && s.status === "playing" && (
+								<RaceTrack players={s.players} me={s.me} total={toFill} />
+							)}
+
+							<div className="relative">
+								<Board
+									givens={s.givens}
+									board={s.board}
+									notes={s.notes}
+									selected={s.selected}
+									pending={s.pending}
+									flashing={s.flashing}
+									recent={race ? undefined : recent}
+									others={race ? undefined : others}
+									readOnly={finished}
+									celebrate={finished}
+									onSelect={(cell) => canPlay && s.select(cell)}
+								/>
+								{showCountdown && (
+									<Countdown msLeft={msLeft} racers={connectedCount} />
+								)}
+								{s.lastError && (
+									<div
+										role="alert"
+										className="banner-in absolute top-2.5 left-1/2 z-5 flex -translate-x-1/2 items-center gap-2 rounded-md bg-toast py-2.5 pr-3.5 pl-3 text-sm font-bold whitespace-nowrap text-white shadow-[0_12px_28px_-8px_rgb(0_0_0/0.45)] lg:top-3.5"
+									>
+										<I icon={IconAlertTriangle} size={18} />
+										{s.lastError}
+									</div>
+								)}
+							</div>
+						</div>
+
+						{finished && s.results ? (
+							<div className="mx-auto w-full max-w-lg lg:max-w-none lg:pt-[42px] xl:col-span-2">
+								<RoomResults
+									results={s.results}
+									players={s.players}
+									me={s.me}
+									mode={s.mode}
+									difficulty={s.difficulty}
+									teamMs={
+										s.startedAt !== null && s.finishedAt !== null
+											? s.finishedAt - s.startedAt
+											: null
+									}
+								/>
+							</div>
+						) : (
 							<>
-								{" · "}Hints: <strong>{s.hints}</strong>
+								<div className="mx-auto flex w-full max-w-lg flex-col gap-3.5 lg:max-w-none lg:pt-[42px]">
+									{s.status === "playing" && (
+										<OnboardingTip onRules={() => setSheet("help")} />
+									)}
+									{s.status === "playing" && (
+										<NumberPad
+											notesMode={s.notesMode}
+											completed={done}
+											disabled={!canPlay}
+											onDigit={(d) =>
+												s.notesMode ? s.toggleNote(d) : s.place(d)
+											}
+											onToggleNotes={s.toggleNotesMode}
+											onClearNotes={s.clearNotes}
+											onHint={s.hint}
+											canHint={selectedEmpty}
+											onUndo={s.undoNote}
+											canUndo={s.noteHistory.length > 0}
+										/>
+									)}
+								</div>
+								<div className="mx-auto flex w-full max-w-lg flex-col gap-4 lg:col-start-2 lg:max-w-none xl:col-start-3 xl:row-start-1 xl:pt-[42px]">
+									{!race && alone && s.status === "playing" && (
+										<div className="hidden lg:block">
+											<InviteCard code={code} />
+										</div>
+									)}
+									{race ? (
+										<RaceLanes
+											players={s.players}
+											me={s.me}
+											hostId={s.hostId}
+											total={toFill}
+											onEnd={
+												isHost && s.status === "playing" ? s.end : undefined
+											}
+										/>
+									) : (
+										<PlayersCard
+											players={s.players}
+											me={s.me}
+											hostId={s.hostId}
+										/>
+									)}
+								</div>
 							</>
 						)}
-					</span>
-				</div>
-
-				<ConnectionBanner status={s.conn} />
-				{s.lastError && (
-					<div
-						role="alert"
-						className="w-full rounded-md bg-red-100 px-3 py-2 text-sm text-red-900 dark:bg-red-950 dark:text-red-100"
-					>
-						{s.lastError}
 					</div>
 				)}
-
-				{lobby ? (
-					<section className="flex w-full flex-col items-center gap-3 rounded-lg border border-slate-200 p-6 text-center dark:border-slate-700">
-						<h2 className="text-lg font-semibold">Race lobby</h2>
-						<p className="text-sm text-slate-500 dark:text-slate-400">
-							Share the invite link. {connectedCount} player
-							{connectedCount === 1 ? "" : "s"} here.
-						</p>
-						{isHost ? (
-							<button
-								type="button"
-								onClick={s.start}
-								disabled={connectedCount < 2}
-								className="rounded-md bg-sky-600 px-6 py-2 font-semibold text-white disabled:opacity-50"
-							>
-								Start race
-							</button>
-						) : (
-							<p className="text-sm">Waiting for the host to start…</p>
-						)}
-						{isHost && connectedCount < 2 && (
-							<p className="text-xs text-slate-500">
-								At least 2 players are needed.
-							</p>
-						)}
-					</section>
-				) : (
-					<div className="relative w-full">
-						<Board
-							givens={s.givens}
-							board={s.board}
-							notes={s.notes}
-							selected={s.selected}
-							pending={s.pending}
-							flashing={s.flashing}
-							others={race ? undefined : others}
-							onSelect={(cell) => canPlay && s.select(cell)}
-						/>
-						{countdown > 0 && (
-							<div
-								role="timer"
-								aria-live="assertive"
-								className="absolute inset-0 flex items-center justify-center rounded-md bg-white/80 text-7xl font-bold dark:bg-slate-900/80"
-							>
-								{countdown}
-							</div>
-						)}
-					</div>
-				)}
-
-				{!lobby && s.status === "playing" && (
-					<NumberPad
-						notesMode={s.notesMode}
-						completed={done}
-						onDigit={(d) => (s.notesMode ? s.toggleNote(d) : s.place(d))}
-						onToggleNotes={s.toggleNotesMode}
-						onClearNotes={s.clearNotes}
-						onHint={s.hint}
-						onUndo={s.undoNote}
-						canUndo={s.noteHistory.length > 0}
-					/>
-				)}
-			</div>
-
-			<aside className="flex w-full flex-col gap-3 md:max-w-sm">
-				{s.status === "finished" && s.results && (
-					<Results results={s.results} me={s.me} race={race} />
-				)}
-				<h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-					Players
-				</h2>
-				<PlayerList
-					players={s.players}
-					me={s.me}
-					hostId={s.hostId}
-					progress={race ? { total: toFill } : undefined}
-				/>
-				{race && isHost && s.status === "playing" && (
-					<button
-						type="button"
-						onClick={s.end}
-						className="self-start rounded-md border border-slate-300 px-3 py-1 text-sm dark:border-slate-600"
-					>
-						End race now
-					</button>
-				)}
-				<Link to="/" className="text-sm text-sky-600 underline">
-					Leave room
-				</Link>
-			</aside>
-		</main>
+				{footer}
+			</main>
+			{sheets}
+		</>
 	);
 }

@@ -1,5 +1,13 @@
-import { memo } from "react";
+import { type CSSProperties, memo } from "react";
 import { maskToDigits } from "../../shared/sudoku/grid";
+
+/** Another player's cursor on this cell. */
+export interface CellVisitor {
+	pencil: number;
+	name: string;
+	/** Initial(s) shown on the tag: two letters when initials collide. */
+	tag: string;
+}
 
 export interface CellProps {
 	index: number;
@@ -11,18 +19,25 @@ export interface CellProps {
 	sameDigit: boolean;
 	conflict: boolean;
 	pending: boolean;
-	flashing: boolean;
-	/** Other players whose selection is on this cell. */
-	others: readonly { color: string; name: string }[];
+	/** The rejected digit while the cell flashes red, else 0. */
+	flash: number;
+	/** Pencil of a teammate who just filled this cell, else 0. */
+	placedBy: number;
+	others: readonly CellVisitor[];
+	readOnly: boolean;
+	/** Win: sweep the success tint diagonally across the board. */
+	wave: boolean;
 	onSelect: (index: number) => void;
 }
 
 const row = (i: number) => Math.floor(i / 9);
 const col = (i: number) => i % 9;
+const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 function describe(p: CellProps): string {
 	const parts = [`Row ${row(p.index) + 1}, column ${col(p.index) + 1}`];
-	if (p.digit) {
+	if (p.flash) parts.push(`empty, wrong ${p.flash}`);
+	else if (p.digit) {
 		parts.push(String(p.digit));
 		if (p.given) parts.push("given");
 		if (p.pending) parts.push("pending");
@@ -32,32 +47,102 @@ function describe(p: CellProps): string {
 		if (notes.length) parts.push(`notes ${notes.join(" ")}`);
 	}
 	if (p.conflict) parts.push("conflict");
-	if (p.flashing) parts.push("wrong");
-	for (const o of p.others) parts.push(`selected by ${o.name}`);
+	if (p.others.length)
+		parts.push(`selected by ${p.others.map((o) => o.name).join(" and ")}`);
 	return parts.join(", ");
 }
 
-function background(p: CellProps): string {
-	if (p.flashing) return "bg-red-300 dark:bg-red-800";
-	if (p.selected) return "bg-sky-200 dark:bg-sky-800";
-	if (p.conflict) return "bg-red-50 dark:bg-red-950";
-	if (p.sameDigit) return "bg-sky-100 dark:bg-sky-950";
-	if (p.related) return "bg-slate-100 dark:bg-slate-800";
-	return "bg-white dark:bg-slate-900";
+/** Fill precedence: flash > selected > conflict > same digit > related > cell. */
+function fill(p: CellProps): string {
+	if (p.flash) return "bg-flash";
+	if (p.readOnly) return "bg-cell";
+	if (p.selected)
+		return "bg-selected shadow-[inset_0_0_0_2px_var(--color-selected-edge)]";
+	if (p.conflict) return "bg-danger-soft";
+	if (p.sameDigit) return "bg-same";
+	if (p.related) return "bg-related";
+	return "bg-cell can-hover:hover:bg-related";
 }
 
-function text(p: CellProps): string {
-	if (p.given) return "font-bold text-slate-900 dark:text-slate-100";
-	if (p.conflict) return "text-red-600 dark:text-red-400";
-	if (p.pending) return "text-sky-700/50 dark:text-sky-300/50 italic";
-	return "text-sky-700 dark:text-sky-300";
+/** The four corner cells follow the frame's radius (frame minus its border). */
+const CORNER: Record<number, string> = {
+	0: "rounded-tl-[8px] @[420px]:rounded-tl-[12px]",
+	8: "rounded-tr-[8px] @[420px]:rounded-tr-[12px]",
+	72: "rounded-bl-[8px] @[420px]:rounded-bl-[12px]",
+	80: "rounded-br-[8px] @[420px]:rounded-br-[12px]",
+};
+
+/** Ring sides for 1-4 visitors: all, L-shapes, A B C A, one side each. */
+function ringColors(others: readonly CellVisitor[]): string {
+	const c = others.map((o) => `var(--color-p${o.pencil})`);
+	const sides =
+		c.length === 1
+			? [c[0], c[0], c[0], c[0]]
+			: c.length === 2
+				? [c[0], c[0], c[1], c[1]]
+				: c.length === 3
+					? [c[0], c[1], c[2], c[0]]
+					: c.slice(0, 4);
+	return sides.join(" ");
+}
+
+function Tags({
+	others,
+	max,
+	className,
+}: {
+	others: readonly CellVisitor[];
+	max: number;
+	className: string;
+}) {
+	const shown = others.length > max ? others.slice(0, max - 1) : others;
+	const tag =
+		"block h-(--tag) min-w-(--tag) rounded-xs px-0.5 text-center text-(length:--tag-f) leading-(--tag) font-extrabold";
+	return (
+		<span
+			aria-hidden
+			className={`pointer-events-none absolute top-0.5 right-0.5 z-1 gap-px ${className}`}
+		>
+			{shown.map((o) => (
+				<span
+					key={o.name + o.pencil}
+					className={`${tag} shadow-[0_0_0_1px_var(--color-cell)]`}
+					style={{
+						background: `var(--color-p${o.pencil})`,
+						color: `var(--color-p${o.pencil}-on)`,
+					}}
+				>
+					{o.tag}
+				</span>
+			))}
+			{others.length > max && (
+				<span className={`${tag} bg-ink text-surface`}>
+					+{others.length - shown.length}
+				</span>
+			)}
+		</span>
+	);
 }
 
 export const Cell = memo(function Cell(props: CellProps) {
-	const { index, digit, notes, others, onSelect } = props;
-	const thickRight = col(index) === 2 || col(index) === 5;
-	const thickBottom = row(index) === 2 || row(index) === 5;
-	const outline = others[0]?.color;
+	const { index, digit, notes, others, onSelect, flash } = props;
+	const r = row(index);
+	const c = col(index);
+	const shown = flash || digit;
+	const corner = CORNER[index] ?? "";
+
+	const digitClass = flash
+		? "text-white font-semibold digit-shake"
+		: [
+				props.conflict && !props.readOnly
+					? "digit-conflict"
+					: props.given
+						? "text-given"
+						: "text-pen",
+				props.given ? "font-extrabold" : "font-semibold",
+				props.pending ? "scale-[.86] opacity-45" : "scale-100 opacity-100",
+				props.placedBy ? "digit-arrive" : "",
+			].join(" ");
 
 	return (
 		<button
@@ -65,50 +150,73 @@ export const Cell = memo(function Cell(props: CellProps) {
 			data-cell={index}
 			aria-label={describe(props)}
 			aria-pressed={props.selected}
+			disabled={props.readOnly}
 			tabIndex={props.selected || (index === 0 && !props.selected) ? 0 : -1}
 			onClick={() => onSelect(index)}
-			style={outline ? { boxShadow: `inset 0 0 0 3px ${outline}` } : undefined}
+			style={props.wave ? { animationDelay: `${(r + c) * 30}ms` } : undefined}
 			className={[
-				"relative flex aspect-square items-center justify-center select-none",
-				"border-slate-300 dark:border-slate-700",
-				"focus-visible:z-10 focus-visible:outline-3 focus-visible:outline-offset-[-3px] focus-visible:outline-amber-500",
-				col(index) < 8 ? "border-r" : "",
-				row(index) < 8 ? "border-b" : "",
-				thickRight
-					? "border-r-2 border-r-slate-700 dark:border-r-slate-300"
-					: "",
-				thickBottom
-					? "border-b-2 border-b-slate-700 dark:border-b-slate-300"
-					: "",
-				background(props),
-				"transition-colors duration-150",
+				"cell relative flex min-h-0 min-w-0 items-center justify-center select-none",
+				"transition-colors duration-(--duration-fast) ease-out active:brightness-95 disabled:cursor-default",
+				c === 8
+					? ""
+					: c === 2 || c === 5
+						? "border-r-2 border-r-box-line"
+						: "border-r border-r-cell-line",
+				r === 8
+					? ""
+					: r === 2 || r === 5
+						? "border-b-2 border-b-box-line"
+						: "border-b border-b-cell-line",
+				corner,
+				fill(props),
+				props.wave ? "cell-wave" : "",
 			].join(" ")}
 		>
-			{digit ? (
+			{shown ? (
 				<span
-					className={`text-[clamp(1.1rem,5vw,1.75rem)] leading-none ${text(props)} ${
-						props.conflict ? "underline decoration-wavy decoration-2" : ""
-					}`}
+					className={`text-(length:--digit) leading-none transition-[scale,opacity] duration-200 ease-settle ${digitClass}`}
 				>
-					{digit}
+					{shown}
 				</span>
 			) : notes ? (
-				<span className="grid h-full w-full grid-cols-3 grid-rows-3 p-px text-[clamp(0.5rem,2.2vw,0.7rem)] leading-none text-slate-500 dark:text-slate-400">
-					{[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
-						<span key={d} className="flex items-center justify-center">
+				<span
+					aria-hidden
+					className="pointer-events-none absolute inset-0.5 grid grid-cols-3 grid-rows-3 @[420px]:inset-1"
+				>
+					{DIGITS.map((d) => (
+						<span
+							key={d}
+							className={`flex items-center justify-center text-(length:--note) leading-none font-bold ${props.selected ? "text-note-strong" : "text-note"}`}
+						>
 							{notes & (1 << (d - 1)) ? d : ""}
 						</span>
 					))}
 				</span>
 			) : null}
-			{others.length > 0 && (
+			{props.placedBy > 0 && (
 				<span
 					aria-hidden
-					className="absolute top-0 right-0.5 text-[0.55rem] leading-tight font-semibold"
-					style={{ color: outline }}
-				>
-					{others.map((o) => o.name.charAt(0)).join("")}
-				</span>
+					className={`cell-ring ring-fade ${corner}`}
+					style={
+						{ "--ring": `var(--color-p${props.placedBy})` } as CSSProperties
+					}
+				/>
+			)}
+			{others.length > 0 && (
+				<>
+					<span
+						aria-hidden
+						className={`cell-ring ${corner}`}
+						style={
+							{
+								"--ring": `var(--color-p${others[0].pencil})`,
+								borderColor: ringColors(others),
+							} as CSSProperties
+						}
+					/>
+					<Tags others={others} max={2} className="flex @[420px]:hidden" />
+					<Tags others={others} max={3} className="hidden @[420px]:flex" />
+				</>
 			)}
 		</button>
 	);

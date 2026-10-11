@@ -38,7 +38,8 @@ export type ClientMessageOf<T extends ClientMessage["type"]> = Extract<
 export const playerSchema = z.object({
 	userId: z.string(),
 	name: z.string(),
-	color: z.string(),
+	/** Pencil 1-8 in join order; the client picks the colour per theme. */
+	pencil: z.number().int().min(1).max(8),
 	connected: z.boolean(),
 	selected: cell.nullable(),
 	placements: z.number().int(),
@@ -46,6 +47,8 @@ export const playerSchema = z.object({
 	hints: z.number().int(),
 	filled: z.number().int(),
 	finished: z.boolean(),
+	/** Race: finish time without penalties, once this player has finished. */
+	finishMs: z.number().int().nullable(),
 });
 export type Player = z.infer<typeof playerSchema>;
 
@@ -130,6 +133,7 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
 		type: z.literal("player_finished"),
 		userId: z.string(),
 		scoreMs: z.number().int(),
+		finishMs: z.number().int().optional(),
 	}),
 	z.object({ type: z.literal("game_over"), results: z.array(resultSchema) }),
 	z.object({

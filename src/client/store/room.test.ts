@@ -19,7 +19,7 @@ const snapshot = (over: Partial<Snapshot> = {}): Snapshot => ({
 		{
 			userId: "me",
 			name: "Me",
-			color: "#000",
+			pencil: 1,
 			connected: true,
 			selected: null,
 			placements: 0,
@@ -27,6 +27,7 @@ const snapshot = (over: Partial<Snapshot> = {}): Snapshot => ({
 			hints: 0,
 			filled: 0,
 			finished: false,
+			finishMs: null,
 		},
 	],
 	mistakes: 0,
@@ -86,11 +87,24 @@ describe("room store", () => {
 		store.getState().select(2);
 		store.getState().place(1);
 		store.getState().handle({ type: "mistake", cell: 2, digit: 1, by: "me" });
-		expect(store.getState().flashing.has(2)).toBe(true);
+		expect(store.getState().flashing.get(2)).toBe(1);
 		expect(store.getState().pending.size).toBe(0);
 		expect(store.getState().mistakes).toBe(1);
 		vi.advanceTimersByTime(MISTAKE_FLASH_MS);
 		expect(store.getState().flashing.has(2)).toBe(false);
+	});
+
+	it("marks a teammate's digit for 600 ms so the board can show who placed it", () => {
+		vi.useFakeTimers();
+		const { store } = setup();
+		const cell = store.getState().board.indexOf("0");
+		const digit = Number(EASY.solution[cell]);
+		store
+			.getState()
+			.handle({ type: "applied", version: 1, cell, digit, by: "friend" });
+		expect(store.getState().recent.get(cell)).toBe("friend");
+		vi.advanceTimersByTime(MISTAKE_FLASH_MS);
+		expect(store.getState().recent.has(cell)).toBe(false);
 	});
 
 	it("removes notes from peers when a digit is applied", () => {

@@ -24,7 +24,10 @@ export interface RoomState extends GameState {
 	conn: ConnectionStatus;
 	/** Optimistic placements awaiting `applied` / `mistake`. */
 	pending: Map<number, number>;
-	flashing: Set<number>;
+	/** Cells flashing red with the digit that was rejected there. */
+	flashing: Map<number, number>;
+	/** Co-op: cells a teammate just filled, with who did it (cleared after a beat). */
+	recent: Map<number, string>;
 	selected: number | null;
 	notesMode: boolean;
 	lastError: string | null;
@@ -77,7 +80,8 @@ const initial = (): GameState & Omit<RoomState, keyof GameState> => ({
 	finishedAt: null,
 	results: null,
 	pending: new Map(),
-	flashing: new Set(),
+	flashing: new Map(),
+	recent: new Map(),
 	selected: null,
 	notesMode: false,
 	lastError: null,
@@ -102,13 +106,25 @@ export function createRoomStore(
 	raceNotes?: NotesStorage,
 ) {
 	return createStore<RoomState & RoomActions>()((set, get) => {
-		const flash = (cell: number) => {
-			set((s) => ({ flashing: new Set(s.flashing).add(cell) }));
+		const flash = (cell: number, digit: number) => {
+			set((s) => ({ flashing: new Map(s.flashing).set(cell, digit) }));
 			setTimeout(() => {
 				set((s) => {
-					const flashing = new Set(s.flashing);
+					const flashing = new Map(s.flashing);
 					flashing.delete(cell);
 					return { flashing };
+				});
+			}, MISTAKE_FLASH_MS);
+		};
+
+		const markRecent = (cell: number, by: string) => {
+			set((s) => ({ recent: new Map(s.recent).set(cell, by) }));
+			setTimeout(() => {
+				set((s) => {
+					if (s.recent.get(cell) !== by) return {};
+					const recent = new Map(s.recent);
+					recent.delete(cell);
+					return { recent };
 				});
 			}, MISTAKE_FLASH_MS);
 		};
@@ -183,6 +199,8 @@ export function createRoomStore(
 						notes[msg.cell] = 0;
 						if (s.mode === "race") raceNotes?.save(notes);
 						const mine = s.mode === "coop" || msg.by === s.me;
+						if (s.mode === "coop" && msg.by !== s.me)
+							markRecent(msg.cell, msg.by);
 						set({
 							version: msg.version,
 							board: setCell(s.board, msg.cell, msg.digit),
@@ -198,7 +216,7 @@ export function createRoomStore(
 						return;
 					}
 					case "mistake": {
-						if (msg.by === s.me) flash(msg.cell);
+						if (msg.by === s.me) flash(msg.cell, msg.digit);
 						set({
 							mistakes: s.mistakes + 1,
 							pending: withoutPending(msg.cell),
@@ -257,6 +275,7 @@ export function createRoomStore(
 						set({
 							players: updatePlayer(s.players, msg.userId, () => ({
 								finished: true,
+								finishMs: msg.finishMs ?? null,
 							})),
 						});
 						return;

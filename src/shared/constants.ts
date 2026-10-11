@@ -27,17 +27,12 @@ export const ROOM_IDLE_TTL_MS = 24 * 60 * 60 * 1000;
 /** Close code sent to an older socket when the same user connects again. */
 export const CLOSE_REPLACED = 4000;
 
-/** Player colours, assigned in order. Each pairs with a distinct name label so colour is never the only signal. */
-export const PLAYER_COLORS = [
-	"#e11d48",
-	"#2563eb",
-	"#16a34a",
-	"#d97706",
-	"#9333ea",
-	"#0891b2",
-	"#db2777",
-	"#65a30d",
-] as const;
+/**
+ * Players get a pencil (1-8) in join order. The client maps it to a colour per
+ * theme; each pencil always travels with the player's initial, so colour is
+ * never the only signal.
+ */
+export const PENCIL_COUNT = 8;
 
 /** Stable error codes sent to clients. */
 export const ERROR_CODES = {

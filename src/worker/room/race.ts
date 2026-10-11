@@ -165,7 +165,8 @@ async function place(
 
 	if (done) {
 		const scoreMs = raceScoreMs(meta, after) ?? 0;
-		room.broadcast({ type: "player_finished", userId, scoreMs });
+		const finishMs = now - (meta.startsAt ?? now);
+		room.broadcast({ type: "player_finished", userId, scoreMs, finishMs });
 		await endIfEveryoneFinished(room);
 	}
 }

@@ -49,7 +49,7 @@ test("a full race between two players ends with ranks", async ({ browser }) => {
 	const bobEmpty = (await readBoard(bob)).indexOf("0");
 	await cell(bob, bobEmpty).click();
 	await bob.keyboard.press(bobAnswer[bobEmpty] === "1" ? "2" : "1");
-	await expect(bob.getByText(/Your mistakes:\s*1/)).toBeVisible();
+	await expect(bob.getByText(/Your mistakes\s*1/)).toBeVisible();
 
 	await Promise.all([solveOwnBoard(alice), solveOwnBoard(bob)]);
 
