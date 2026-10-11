@@ -36,7 +36,7 @@ export function History() {
 
 	if (!games?.length) return null;
 	return (
-		<section className="flex flex-col rounded-xl lg:col-start-1 lg:row-start-1 bg-surface px-4 pt-5 pb-2 shadow-card sm:px-6">
+		<section className="flex flex-col rounded-xl bg-surface px-4 pt-5 pb-2 shadow-card sm:px-6">
 			<div className="mb-2 flex items-baseline justify-between">
 				<h2 className="text-lg font-extrabold">Your recent games</h2>
 				<span className="text-[13px] text-ink-3">Last 20</span>
@@ -47,13 +47,13 @@ export function History() {
 						key={g.gameId}
 						className="flex items-center gap-3.5 border-t border-hair py-3.5"
 					>
-						<span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-sunken text-ink-2">
+						<span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-sunken text-ink-2">
 							<I icon={g.mode === "coop" ? IconUsers : IconFlag} size={18} />
 						</span>
 						<div className="flex min-w-0 flex-1 flex-col gap-0.5">
 							<span className="truncate text-[15px] font-bold">
 								{g.mode === "coop" ? "Co-op" : "Race"} · {cap(g.difficulty)}
-								{g.rank ? ` · ${ordinal(g.rank)}` : ""}
+								{g.rank ? `, ${ordinal(g.rank)} place` : ""}
 							</span>
 							<span className="text-[13px] text-ink-2">
 								{when(g.finishedAt)}

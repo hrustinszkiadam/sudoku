@@ -11,7 +11,7 @@ const MEDAL = [
 function Rank({ n }: { n: number }) {
 	return n <= 3 ? (
 		<span
-			className={`inline-flex size-[26px] items-center justify-center rounded-[7px] font-mono text-[13px] font-bold ${MEDAL[n - 1]}`}
+			className={`inline-flex size-[26px] items-center justify-center rounded-sm font-mono text-[13px] font-bold ${MEDAL[n - 1]}`}
 		>
 			{n}
 		</span>
@@ -78,7 +78,7 @@ export function LeaderboardTable({
 						return (
 							<tr
 								key={r.userId}
-								className={`border-t border-hair ${you ? "bg-brand-softer shadow-[inset_3px_0_0_var(--color-brand)]" : ""}`}
+								className={`[&>td:first-child]:rounded-l-md [&>td:last-child]:rounded-r-md ${you ? "bg-brand-soft" : "even:bg-sunken/70"}`}
 							>
 								<td className={`${cell} text-center`}>
 									<Rank n={i + 1} />
@@ -99,7 +99,7 @@ export function LeaderboardTable({
 				</tbody>
 			</table>
 			{pinned && (
-				<p className="mt-3 flex items-center gap-3 rounded-md bg-brand-softer px-3.5 py-3 text-[15px] shadow-[inset_3px_0_0_var(--color-brand)]">
+				<p className="mt-3 flex items-center gap-3 rounded-md bg-brand-soft px-3.5 py-3 text-[15px] ">
 					<span className="font-mono font-bold text-ink-2">{myIndex + 1}</span>
 					<span className="min-w-0 truncate font-bold">{pinned.name}</span>
 					<span className="shrink-0 text-ink-3">(you)</span>

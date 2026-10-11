@@ -15,7 +15,7 @@ function DateTile({ date }: { date: Date }) {
 	return (
 		<div
 			aria-hidden
-			className="flex w-24 flex-col items-center rounded-[22px] bg-accent pt-3 pb-2 text-[#151D33] shadow-[0_6px_0_0_#D8901A] lg:w-28"
+			className="flex w-24 flex-col items-center rounded-xl bg-accent pt-3 pb-2 text-[#151D33] shadow-[0_6px_0_0_#D8901A] lg:w-28"
 		>
 			<span className="text-xs font-extrabold tracking-[0.08em] uppercase">
 				{fmt({ weekday: "short" })} · {fmt({ month: "short" })}
@@ -72,14 +72,15 @@ export function Daily() {
 		<main className="mx-auto grid w-full grid-cols-1 max-w-[1280px] items-start gap-8 px-4 pt-7 pb-12 md:px-8 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:gap-24 lg:pt-16 xl:px-12">
 			<div className="flex flex-col gap-4">
 				<DateTile date={date} />
-				<h1 className="mt-3 font-display text-[44px] leading-none font-extrabold tracking-[-0.035em] lg:text-[64px]">
+				<h1 className="mt-3 font-display text-[40px] leading-none font-extrabold tracking-[-0.03em] lg:text-5xl">
 					Daily puzzle
 				</h1>
 				<p className="text-lg font-bold">
 					{long} · <span className="capitalize">{daily.difficulty}</span>
 				</p>
 				<p className="text-[17px] leading-relaxed text-ink-2">
-					Everyone gets the same puzzle; it changes at midnight UTC.
+					One puzzle for everyone, new at midnight UTC. Replay as often as you
+					like: your best time counts.
 				</p>
 				<Link
 					to={`/r/${daily.code}`}
@@ -88,9 +89,6 @@ export function Daily() {
 					<I icon={IconTable} />
 					Play today's puzzle
 				</Link>
-				<p className="text-[13px] text-ink-2">
-					Opens a solo room. Your best time counts; replays are fine.
-				</p>
 			</div>
 			<section className="rounded-xl bg-surface px-4 py-5 shadow-card sm:px-7 sm:py-7">
 				<div className="mb-4 flex items-baseline justify-between gap-3">

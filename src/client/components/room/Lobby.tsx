@@ -63,7 +63,7 @@ export function Lobby({
 				</p>
 			</div>
 
-			<div className="flex flex-wrap items-center justify-between gap-4 rounded-[20px] bg-sunken p-3.5 lg:px-5 lg:py-[18px]">
+			<div className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-sunken p-3.5 lg:px-5 lg:py-[18px]">
 				<p
 					role="img"
 					aria-label={`Room code ${code.split("").join(" ")}`}
@@ -118,7 +118,7 @@ export function Lobby({
 			<ol className="grid gap-4 lg:grid-cols-3">
 				{RULES.map((r, i) => (
 					<li key={r.title} className="flex items-start gap-3">
-						<span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-brand-softer font-mono text-[15px] font-bold text-brand-strong">
+						<span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-brand-softer font-mono text-[15px] font-bold text-brand-strong">
 							{i + 1}
 						</span>
 						<div className="flex flex-col gap-[3px]">
@@ -150,7 +150,7 @@ export function Lobby({
 				) : (
 					<p
 						role="status"
-						className="flex h-14 items-center gap-3 rounded-[14px] bg-sunken px-[18px] text-base font-bold text-ink-2"
+						className="flex h-14 items-center gap-3 rounded-lg bg-sunken px-[18px] text-base font-bold text-ink-2"
 					>
 						<span aria-hidden className="flex gap-1">
 							<span className="size-[7px] rounded-full bg-brand" />

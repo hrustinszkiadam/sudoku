@@ -65,7 +65,7 @@ export function NumberPad({
 	const hasTools = Boolean(onHint || onUndo);
 	return (
 		<div className="flex w-full flex-col gap-3.5">
-			<div className="flex w-full flex-col gap-1.5 lg:gap-2.5 lg:rounded-[20px] lg:bg-surface lg:p-3.5 lg:shadow-card">
+			<div className="flex w-full flex-col gap-1.5 lg:gap-2.5 lg:rounded-lg lg:bg-surface lg:p-3.5 lg:shadow-card">
 				<div className="grid grid-cols-5 gap-1.5 lg:grid-cols-3 lg:gap-2">
 					{DIGITS.map((d, i) => {
 						const done = completed?.has(d) ?? false;

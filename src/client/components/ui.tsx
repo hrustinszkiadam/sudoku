@@ -60,7 +60,7 @@ export function initialOf(name: string): string {
 
 const TILE_SIZE = {
 	xs: "size-[17px] rounded-xs text-[11px]",
-	sm: "size-6 rounded-[6px] text-xs",
+	sm: "size-6 rounded-xs text-xs",
 	md: "size-8 rounded-sm text-sm",
 	lg: "size-13 rounded-md text-xl",
 } as const;
@@ -103,7 +103,7 @@ export const btnBase =
 
 /** Button looks. Heights: lg 56 (primary actions), md 48, sm 40. */
 export const btn = {
-	primary: `${btnBase} bg-brand text-on-brand shadow-[0_8px_20px_-8px_var(--color-brand)] hover:bg-brand-strong active:shadow-none disabled:bg-brand/45 disabled:shadow-none`,
+	primary: `${btnBase} bg-brand text-on-brand shadow-[inset_0_1px_0_rgb(255_255_255/0.16)] hover:bg-brand-strong disabled:bg-brand/45 disabled:shadow-none`,
 	secondary: `${btnBase} border border-line bg-surface text-ink hover:bg-sunken disabled:text-ink-3`,
 	ghost: `${btnBase} text-ink-2 hover:bg-sunken hover:text-ink`,
 	danger: `${btnBase} border border-danger bg-surface text-danger hover:bg-danger-soft`,

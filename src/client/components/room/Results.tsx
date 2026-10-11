@@ -112,7 +112,7 @@ function ResultTable({
 					return (
 						<li
 							key={r.userId}
-							className={`flex items-center gap-2.5 border-t border-hair px-2 py-2.5 ${you ? "bg-brand-softer shadow-[inset_3px_0_0_var(--color-brand)]" : ""}`}
+							className={`flex items-center gap-2.5 rounded-md px-2 py-2.5 ${you ? "bg-brand-soft" : "even:bg-sunken/70"}`}
 						>
 							{race && (
 								<span className="w-4 shrink-0 font-mono text-sm font-bold">
@@ -130,7 +130,7 @@ function ResultTable({
 									)}
 								</span>
 								<span className="text-[13px] text-ink-2">
-									{r.placements} placed · {plural(r.mistakes, "mistake")} ·{" "}
+									{r.placements} placed, {plural(r.mistakes, "mistake")},{" "}
 									{plural(r.hints, "hint")}
 								</span>
 							</div>
@@ -176,7 +176,7 @@ function ResultTable({
 							return (
 								<tr
 									key={r.userId}
-									className={`border-t border-hair ${you ? "bg-brand-softer shadow-[inset_3px_0_0_var(--color-brand)]" : ""}`}
+									className={`[&>td:first-child]:rounded-l-md [&>td:last-child]:rounded-r-md ${you ? "bg-brand-soft" : "even:bg-sunken/70"}`}
 								>
 									{race && (
 										<td className="px-1 py-2.5 font-mono font-bold">
@@ -321,7 +321,7 @@ export function RoomResults({
 						: "",
 				]
 					.filter(Boolean)
-					.join(" · ")
+					.join(", ")
 			: "Nobody finished this time.";
 	} else {
 		const mistakes = rows.reduce((n, r) => n + r.mistakes, 0);
@@ -338,7 +338,7 @@ export function RoomResults({
 			plural(rows.length, "player"),
 			plural(mistakes, "mistake"),
 			plural(hints, "hint"),
-		].join(" · ");
+		].join(", ");
 	}
 	const placed = rows.reduce((n, r) => n + r.placements, 0);
 	const contributors = [...rows]
@@ -405,7 +405,7 @@ export function RoomResults({
 										className="flex items-center gap-1.5 text-[13px] text-ink-2"
 									>
 										<span
-											className="size-2.5 rounded-[3px]"
+											className="size-2.5 rounded-xs"
 											style={{ background: `var(--color-p${r.pencil})` }}
 										/>
 										<span className="max-w-[120px] truncate">{r.name}</span>
@@ -425,14 +425,14 @@ export function RoomResults({
 			<div className="relative flex flex-wrap gap-2.5">
 				<Link
 					to={again}
-					className={`${btn.primary} h-[52px] flex-[1_1_180px] rounded-[14px] text-base font-extrabold`}
+					className={`${btn.primary} h-[52px] flex-[1_1_180px] rounded-md text-base font-extrabold`}
 				>
 					<I icon={IconRotate} />
 					{race ? "Rematch" : "Play again"}
 				</Link>
 				<Link
 					to="/"
-					className={`${btn.secondary} h-[52px] flex-[1_1_140px] rounded-[14px] text-base font-extrabold`}
+					className={`${btn.secondary} h-[52px] flex-[1_1_140px] rounded-md text-base font-extrabold`}
 				>
 					<I icon={IconPlus} />
 					New game

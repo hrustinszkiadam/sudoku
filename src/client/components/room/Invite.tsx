@@ -15,7 +15,7 @@ export function InviteCard({ code }: { code: string }) {
 	return (
 		<section
 			aria-label="Invite friends"
-			className="flex flex-col gap-3 rounded-[20px] bg-brand p-5 text-on-brand shadow-[0_18px_40px_-16px_rgb(52_83_211/0.6)]"
+			className="flex flex-col gap-3 rounded-lg bg-brand p-5 text-on-brand shadow-card"
 		>
 			<Overline className="text-on-brand/80">Invite friends</Overline>
 			<p className="font-display text-[26px] leading-[1.08] font-extrabold tracking-[-0.02em]">
@@ -24,7 +24,7 @@ export function InviteCard({ code }: { code: string }) {
 			<p className="text-[15px] leading-snug opacity-90">
 				Send the link. Friends join straight into this board, no sign-up.
 			</p>
-			<span className="block truncate rounded-[10px] bg-white/16 px-3 py-2.5 font-mono text-[11px] font-bold">
+			<span className="block truncate rounded-md bg-white/16 px-3 py-2.5 font-mono text-[11px] font-bold">
 				{url.replace(/^https?:\/\//, "")}
 			</span>
 			<div className={`grid gap-2 ${share ? "grid-cols-2" : "grid-cols-1"}`}>

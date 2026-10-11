@@ -258,3 +258,11 @@
 .tick {
 	animation: tick 600ms var(--ease-out);
 }
+
+/* Home: the hero and new-game card arrive in reading order (--i), once. */
+@media (prefers-reduced-motion: no-preference) {
+	.enter {
+		animation: rise 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+		animation-delay: calc(var(--i, 0) * 70ms);
+	}
+}

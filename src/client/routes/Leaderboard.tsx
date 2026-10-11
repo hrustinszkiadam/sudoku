@@ -53,7 +53,7 @@ export function Leaderboard() {
 	return (
 		<main className="mx-auto flex w-full max-w-[896px] flex-col gap-6 px-4 pt-7 pb-12 md:px-8 lg:pt-14">
 			<div className="flex flex-col gap-2">
-				<h1 className="font-display text-[44px] leading-none font-extrabold tracking-[-0.035em] lg:text-[64px]">
+				<h1 className="font-display text-[40px] leading-none font-extrabold tracking-[-0.03em] lg:text-5xl">
 					Leaderboard
 				</h1>
 				<p className="text-[17px] text-ink-2">

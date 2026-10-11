@@ -15,9 +15,9 @@
 
 	/* UI: light (dark overrides below) */
 	--color-bg: #f5f7fc;
-	--color-surface: #ffffff;
+	--color-surface: #fcfdff;
 	--color-sunken: #edf0f6;
-	--color-raised: #ffffff;
+	--color-raised: #fcfdff;
 	--color-hair: #dbe0e9;
 	--color-line: #c5ccda;
 	--color-ink: #151d33;
@@ -40,7 +40,7 @@
 	--color-toast: #c51d28;
 
 	/* Board */
-	--color-cell: #ffffff;
+	--color-cell: #fcfdff;
 	--color-cell-line: #d2d7e4;
 	--color-box-line: #2a344f;
 	--color-related: #eff2f9;

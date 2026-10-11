@@ -8,7 +8,7 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 function HostBadge() {
 	return (
-		<span className="inline-flex h-[18px] shrink-0 items-center rounded-[5px] bg-brand-soft px-1.5 text-[11px] font-extrabold tracking-[0.04em] text-brand-strong uppercase">
+		<span className="inline-flex h-[18px] shrink-0 items-center rounded-xs bg-brand-soft px-1.5 text-[11px] font-extrabold tracking-[0.04em] text-brand-strong uppercase">
 			Host
 		</span>
 	);
@@ -58,16 +58,17 @@ export function PlayersCard({
 	lobby?: boolean;
 }) {
 	return (
-		<section className="rounded-[20px] bg-surface px-[18px] pt-4 pb-2 shadow-card">
+		<section className="rounded-lg bg-surface px-[18px] pt-4 pb-2 shadow-card">
 			<CardHead title="Players" aside={`${players.length} / 8`} />
 			<ul aria-label="Players">
 				{players.map((p) => {
-					const status = p.connected ? "online" : "offline";
 					const meta = lobby
 						? p.connected
-							? `online · ${p.userId === hostId ? "starts the race" : "ready"}`
-							: "offline"
-						: `${status} · ${p.placements} placed · ${plural(p.mistakes, "mistake")}`;
+							? p.userId === hostId
+								? "Starts the race"
+								: "Ready"
+							: "Offline"
+						: `${p.connected ? "" : "Offline, "}${p.placements} placed, ${plural(p.mistakes, "mistake")}`;
 					return (
 						<li
 							key={p.userId}
@@ -81,7 +82,10 @@ export function PlayersCard({
 							</span>
 							<div className="flex min-w-0 flex-1 flex-col gap-0.5">
 								<Name player={p} me={me} host={hostId} />
-								<span className="truncate text-[13px] text-ink-2">{meta}</span>
+								<span className="truncate text-[13px] text-ink-2">
+									{p.connected && <span className="sr-only">Online, </span>}
+									{meta}
+								</span>
 							</div>
 						</li>
 					);
@@ -123,7 +127,7 @@ export function RaceLanes({
 	const lanes = raceOrder(players);
 	const myPlace = lanes.findIndex((p) => p.userId === me) + 1;
 	return (
-		<section className="flex flex-col rounded-[20px] bg-surface px-[18px] pt-4 pb-3.5 shadow-card">
+		<section className="flex flex-col rounded-lg bg-surface px-[18px] pt-4 pb-3.5 shadow-card">
 			<div className="mb-1.5 flex items-baseline justify-between gap-2">
 				<h2 className="text-base font-extrabold">Race</h2>
 				{myPlace > 0 && (
@@ -155,7 +159,7 @@ export function RaceLanes({
 											{p.finishMs !== null && ` ${formatMs(p.finishMs)}`}
 										</>
 									) : (
-										`${p.connected ? "" : "offline · "}${p.filled} / ${total}`
+										`${p.connected ? "" : "offline, "}${p.filled} / ${total}`
 									)}
 								</span>
 							</div>
@@ -264,7 +268,7 @@ export function RaceTrack({
 						...pencilStyle(p.pencil),
 						left: `calc((100% - 48px) * ${Math.min(at, 100) / 100})`,
 					}}
-					className={`absolute top-2.5 flex size-5 items-center justify-center rounded-[6px] bg-(--pc) text-[11px] font-extrabold text-(--pc-on) transition-[left] duration-400 ease-standard ${p.userId === me ? "shadow-[0_0_0_2px_var(--color-bg),0_0_0_4px_var(--color-brand)]" : "shadow-[0_0_0_2px_var(--color-bg)]"} ${p.connected ? "" : "opacity-55"}`}
+					className={`absolute top-2.5 flex size-5 items-center justify-center rounded-xs bg-(--pc) text-[11px] font-extrabold text-(--pc-on) transition-[left] duration-400 ease-standard ${p.userId === me ? "shadow-[0_0_0_2px_var(--color-bg),0_0_0_4px_var(--color-brand)]" : "shadow-[0_0_0_2px_var(--color-bg)]"} ${p.connected ? "" : "opacity-55"}`}
 				>
 					{initialOf(p.name)}
 				</span>

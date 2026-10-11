@@ -25,16 +25,13 @@ export function OnboardingTip({ onRules }: { onRules: () => void }) {
 	return (
 		<aside
 			aria-label="Tip"
-			className="results-rise relative rounded-[20px] bg-[#151D33] p-4 text-[#EDF0F7] shadow-float dark:bg-raised dark:ring-1 dark:ring-line"
+			className="results-rise relative rounded-lg bg-[#151D33] p-4 text-[#EDF0F7] shadow-float dark:bg-raised dark:ring-1 dark:ring-line"
 		>
 			<span
 				aria-hidden
-				className="absolute -top-2 left-14 size-4 rotate-45 rounded-[3px] bg-inherit lg:hidden"
+				className="absolute -top-2 left-14 size-4 rotate-45 rounded-xs bg-inherit lg:hidden"
 			/>
-			<p className="text-xs font-extrabold tracking-[0.08em] text-[#F9B73F] uppercase">
-				New here?
-			</p>
-			<p className="mt-2 text-base font-bold">
+			<p className="text-base font-bold">
 				Tap a cell, then a number. Turn on Notes for pencil marks.
 			</p>
 			<p className="mt-2 text-sm text-[#B4BACB]">
