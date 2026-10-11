@@ -321,7 +321,7 @@ function RoomView({ code, store }: { code: string; store: RoomStore }) {
 			<main className="mx-auto w-full max-w-[1280px] px-4 pb-7 md:px-8 lg:pb-10 xl:px-12">
 				{bar}
 				{lobby ? (
-					<div className="grid items-start gap-4 lg:grid-cols-[minmax(0,848px)_minmax(0,296px)] lg:gap-10">
+					<div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,848px)_minmax(0,296px)] lg:gap-10">
 						<Lobby
 							code={code}
 							difficulty={s.difficulty}
@@ -337,7 +337,7 @@ function RoomView({ code, store }: { code: string; store: RoomStore }) {
 						/>
 					</div>
 				) : (
-					<div className="grid items-start gap-4 lg:grid-cols-[minmax(0,512px)_minmax(296px,1fr)] lg:gap-x-10 lg:gap-y-6 xl:grid-cols-[512px_296px_minmax(0,296px)]">
+					<div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,512px)_minmax(296px,1fr)] lg:gap-x-10 lg:gap-y-6 xl:grid-cols-[512px_296px_minmax(0,296px)]">
 						<div className="mx-auto w-full max-w-lg lg:row-span-2">
 							<div className="mb-2 flex h-8 items-center justify-between gap-3 lg:h-[34px]">
 								<div className="flex min-w-0 items-center gap-2">

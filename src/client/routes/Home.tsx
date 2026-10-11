@@ -1,134 +1,187 @@
+import {
+	IconAlertTriangle,
+	IconCheck,
+	IconFlag,
+	IconPlus,
+	IconUsers,
+} from "@tabler/icons-react";
 import { type FormEvent, useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { DIFFICULTIES, MODES, ROOM_CODE_LENGTH } from "../../shared/constants";
+import {
+	SignInButtons,
+	SignOutButton,
+	useAuthProviders,
+} from "../components/Account";
 import { History } from "../components/History";
+import { field, NicknameForm } from "../components/ProfileMenu";
+import { SegmentedRadio } from "../components/Segmented";
 import { Turnstile } from "../components/Turnstile";
+import { btn, I, initialOf, pencilFor, pencilStyle } from "../components/ui";
 import { usePageMeta } from "../meta";
-import { ApiError, type AuthProvider, api } from "../net/api";
+import { ApiError, api } from "../net/api";
 import { useSession } from "../store/session";
 import type { Difficulty, Mode } from "../types";
 
-const MODE_LABEL: Record<Mode, string> = {
-	coop: "Co-op",
-	race: "Race",
-};
-const MODE_HINT: Record<Mode, string> = {
-	coop: "Everyone fills one shared board. Play alone for single-player.",
-	race: "Same puzzle, separate boards. Fastest time + 10 s per mistake wins.",
-};
-
-const card =
-	"flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900";
-const button =
-	"rounded-md bg-sky-600 px-4 py-2 font-semibold text-white shadow-sm hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-3 focus-visible:outline-amber-500";
-const input =
-	"rounded-md border border-slate-300 bg-white px-3 py-2 dark:border-slate-600 dark:bg-slate-800";
-
-function NameForm() {
-	const session = useSession((s) => s.session);
-	const rename = useSession((s) => s.rename);
-	const [name, setName] = useState("");
-	const [status, setStatus] = useState<string | null>(null);
-	useEffect(() => setName(session?.name ?? ""), [session?.name]);
-
-	const submit = async (e: FormEvent) => {
-		e.preventDefault();
-		const error = await rename(name);
-		setStatus(error ?? "Saved");
+const MODE_INFO: Record<Mode, { label: string; short: string; long: string }> =
+	{
+		coop: {
+			label: "Co-op",
+			short: "One shared board",
+			long: "Everyone fills one shared board in real time and sees each other's selected cell.",
+		},
+		race: {
+			label: "Race",
+			short: "Same puzzle, own boards",
+			long: "Same puzzle, separate boards. Fastest time + 10 s per mistake wins.",
+		},
 	};
 
+const STEPS = [
+	{ title: "Create a room", text: "Pick Co-op or Race and a difficulty." },
+	{
+		title: "Share the link",
+		text: "Friends join instantly from any phone or laptop.",
+	},
+	{
+		title: "Play",
+		text: "Tap a cell, then a number. Turn on Notes for pencil marks.",
+	},
+];
+
+const isMode = (v: string | null): v is Mode => MODES.includes(v as Mode);
+const isDifficulty = (v: string | null): v is Difficulty =>
+	DIFFICULTIES.includes(v as Difficulty);
+
+function Steps() {
 	return (
-		<form className={card} onSubmit={submit}>
-			<label htmlFor="nickname" className="font-semibold">
-				Your nickname
-			</label>
-			<div className="flex gap-2">
-				<input
-					id="nickname"
-					className={`${input} min-w-0 flex-1`}
-					value={name}
-					maxLength={40}
-					onChange={(e) => {
-						setName(e.target.value);
-						setStatus(null);
-					}}
-				/>
-				<button type="submit" className={button} disabled={!session}>
-					Save
-				</button>
-			</div>
-			{status && (
-				<p role="status" className="text-sm text-slate-600 dark:text-slate-300">
-					{status}
-				</p>
-			)}
-		</form>
+		<ol className="flex flex-col gap-4">
+			{STEPS.map((s, i) => (
+				<li key={s.title} className="flex items-start gap-3.5">
+					<span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-surface font-mono text-[15px] font-bold text-brand-strong shadow-card">
+						{i + 1}
+					</span>
+					<div className="flex flex-col gap-0.5">
+						<span className="text-base font-bold">{s.title}</span>
+						<span className="text-[15px] text-ink-2">{s.text}</span>
+					</div>
+				</li>
+			))}
+		</ol>
 	);
 }
 
-const PROVIDER_LABEL = { github: "GitHub", google: "Google" } as const;
-
-function AccountCard() {
+function AppearAs() {
 	const session = useSession((s) => s.session);
-	const signIn = useSession((s) => s.signIn);
-	const signOut = useSession((s) => s.signOut);
-	const [providers, setProviders] = useState<AuthProvider[]>([]);
-	useEffect(() => {
-		api
-			.config()
-			.then((c) => setProviders(c.authProviders))
-			.catch(() => setProviders([]));
-	}, []);
-
-	if (session?.account) {
+	const [editing, setEditing] = useState(false);
+	if (!session) return <div className="h-10" />;
+	if (editing) {
 		return (
-			<section className={card}>
-				<p className="text-sm">
-					Signed in as <strong>{session.account.email}</strong>. Your games are
-					saved to your account.
-				</p>
-				<button
-					type="button"
-					className="self-start rounded-md border border-slate-300 px-3 py-1 text-sm dark:border-slate-600"
-					onClick={signOut}
-				>
-					Sign out
-				</button>
-			</section>
+			<div className="max-w-sm">
+				<NicknameForm autoFocus onSaved={() => setEditing(false)} />
+			</div>
 		);
 	}
-	if (providers.length === 0) return null;
 	return (
-		<section className={card}>
-			<p className="text-sm">
-				Sign in to keep your history across devices. Your current guest games
-				come with you.
-			</p>
-			<div className="flex flex-wrap gap-2">
-				{providers.map((p) => (
-					<button
-						key={p}
-						type="button"
-						className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold dark:border-slate-600 dark:bg-slate-800"
-						onClick={() => signIn(p)}
-					>
-						Sign in with {PROVIDER_LABEL[p]}
-					</button>
-				))}
-			</div>
-		</section>
+		<p className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[15px] text-ink-2">
+			You'll appear as
+			<span
+				style={pencilStyle(pencilFor(session.userId))}
+				className="inline-flex h-10 max-w-[220px] items-center gap-2.5 rounded-full border border-hair bg-surface pr-3.5 pl-1 text-ink"
+			>
+				<span className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-(--pc) text-sm font-extrabold text-(--pc-on)">
+					{initialOf(session.name)}
+				</span>
+				<span className="truncate text-[15px] font-bold">{session.name}</span>
+			</span>
+			<button
+				type="button"
+				onClick={() => setEditing(true)}
+				className="font-extrabold text-brand-strong underline underline-offset-2"
+			>
+				Change
+			</button>
+		</p>
 	);
 }
 
-function CreateRoom() {
+function ModeCards({
+	mode,
+	onChange,
+}: {
+	mode: Mode;
+	onChange: (m: Mode) => void;
+}) {
+	return (
+		<fieldset className="flex flex-col">
+			<legend className="mb-2 text-xs font-extrabold tracking-[0.08em] text-ink-3 uppercase">
+				Mode
+			</legend>
+			<div className="grid grid-cols-2 gap-3">
+				{MODES.map((m) => {
+					const on = mode === m;
+					return (
+						<label
+							key={m}
+							className={`relative flex cursor-pointer flex-col gap-1 rounded-lg border p-4 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus ${
+								on
+									? "border-2 border-brand bg-brand-softer p-[15px]"
+									: "border-line bg-surface hover:bg-sunken"
+							}`}
+						>
+							<input
+								type="radio"
+								name="mode"
+								value={m}
+								className="sr-only"
+								checked={on}
+								onChange={() => onChange(m)}
+							/>
+							<I
+								icon={m === "coop" ? IconUsers : IconFlag}
+								size={22}
+								className={on ? "text-brand" : "text-ink-2"}
+							/>
+							<span className="mt-1 text-[17px] font-bold">
+								{MODE_INFO[m].label}
+							</span>
+							<span className="hidden text-sm text-ink-2 sm:block">
+								{MODE_INFO[m].short}
+							</span>
+							{on && (
+								<span className="absolute top-2.5 right-2.5 flex size-[22px] items-center justify-center rounded-full bg-brand text-on-brand">
+									<I icon={IconCheck} size={14} stroke={3} />
+								</span>
+							)}
+						</label>
+					);
+				})}
+			</div>
+			<p className="mt-2.5 text-[15px] leading-snug text-ink-2">
+				{MODE_INFO[mode].long}
+			</p>
+		</fieldset>
+	);
+}
+
+function NewGame() {
 	const navigate = useNavigate();
-	const [mode, setMode] = useState<Mode>("coop");
-	const [difficulty, setDifficulty] = useState<Difficulty>("easy");
+	const [params] = useSearchParams();
+	const [mode, setMode] = useState<Mode>(() => {
+		const m = params.get("mode");
+		return isMode(m) ? m : "coop";
+	});
+	const [difficulty, setDifficulty] = useState<Difficulty>(() => {
+		const d = params.get("difficulty");
+		return isDifficulty(d) ? d : "easy";
+	});
 	const [siteKey, setSiteKey] = useState<string | null>(null);
 	const [token, setToken] = useState<string | null>(null);
 	const [resetKey, setResetKey] = useState(0);
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [code, setCode] = useState("");
+	const validCode = code.length === ROOM_CODE_LENGTH;
 
 	useEffect(() => {
 		api
@@ -160,120 +213,171 @@ function CreateRoom() {
 	};
 
 	return (
-		<form className={card} onSubmit={submit}>
-			<h2 className="text-lg font-semibold">New game</h2>
-			<fieldset className="flex flex-col gap-2">
-				<legend className="mb-1 text-sm font-medium">Mode</legend>
-				<div className="grid grid-cols-2 gap-2">
-					{MODES.map((m) => (
-						<label
-							key={m}
-							className={`cursor-pointer rounded-md border px-3 py-2 text-center has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-amber-500 ${
-								mode === m
-									? "border-sky-600 bg-sky-50 font-semibold dark:bg-sky-950"
-									: "border-slate-300 dark:border-slate-600"
-							}`}
-						>
-							<input
-								type="radio"
-								name="mode"
-								value={m}
-								className="sr-only"
-								checked={mode === m}
-								onChange={() => setMode(m)}
-							/>
-							{MODE_LABEL[m]}
-						</label>
-					))}
+		<section
+			id="new-game"
+			aria-labelledby="new-game-title"
+			className="flex scroll-mt-6 flex-col gap-5 rounded-xl bg-surface p-4 shadow-float sm:p-7"
+		>
+			<h2
+				id="new-game-title"
+				className="font-display text-[26px] leading-tight font-extrabold tracking-[-0.01em] sm:text-[28px]"
+			>
+				New game
+			</h2>
+			<form className="flex flex-col gap-5" onSubmit={submit}>
+				<ModeCards mode={mode} onChange={setMode} />
+				<SegmentedRadio
+					name="difficulty"
+					label="Difficulty"
+					options={DIFFICULTIES}
+					value={difficulty}
+					onChange={setDifficulty}
+				/>
+				<div className="flex min-h-[65px] items-center">
+					{siteKey && (
+						<Turnstile
+							siteKey={siteKey}
+							onToken={setToken}
+							resetKey={resetKey}
+						/>
+					)}
 				</div>
-				<p className="text-xs text-slate-500 dark:text-slate-400">
-					{MODE_HINT[mode]}
-				</p>
-			</fieldset>
-			<fieldset className="flex flex-col gap-2">
-				<legend className="mb-1 text-sm font-medium">Difficulty</legend>
-				<div className="grid grid-cols-4 gap-1">
-					{DIFFICULTIES.map((d) => (
-						<label
-							key={d}
-							className={`cursor-pointer rounded-md border px-1 py-2 text-center text-sm capitalize has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-amber-500 ${
-								difficulty === d
-									? "border-sky-600 bg-sky-50 font-semibold dark:bg-sky-950"
-									: "border-slate-300 dark:border-slate-600"
-							}`}
-						>
-							<input
-								type="radio"
-								name="difficulty"
-								value={d}
-								className="sr-only"
-								checked={difficulty === d}
-								onChange={() => setDifficulty(d)}
+				<div className="flex flex-col gap-2.5">
+					<button
+						type="submit"
+						className={`${btn.primary} ${btn.lg} w-full`}
+						disabled={!token || busy}
+					>
+						{busy ? (
+							<span
+								aria-hidden
+								className="spin-slow size-5 rounded-full border-2 border-current border-r-transparent"
 							/>
-							{d}
-						</label>
-					))}
+						) : (
+							<I icon={IconPlus} />
+						)}
+						{busy ? "Creating…" : "Create room"}
+					</button>
+					{error ? (
+						<p
+							role="alert"
+							className="flex items-center justify-center gap-1.5 text-center text-sm font-bold text-danger"
+						>
+							<I icon={IconAlertTriangle} size={16} />
+							{error}
+						</p>
+					) : (
+						<p className="text-center text-sm text-ink-2">
+							You get a link to share as soon as the room exists.
+						</p>
+					)}
 				</div>
-			</fieldset>
-			{siteKey && (
-				<Turnstile siteKey={siteKey} onToken={setToken} resetKey={resetKey} />
-			)}
-			<button type="submit" className={button} disabled={!token || busy}>
-				{busy ? "Creating…" : "Create room"}
-			</button>
-			{error && (
-				<p role="alert" className="text-sm text-red-600 dark:text-red-400">
-					{error}
-				</p>
-			)}
-		</form>
+			</form>
+			<form
+				className="flex flex-col gap-3"
+				onSubmit={(e) => {
+					e.preventDefault();
+					if (validCode) navigate(`/r/${code}`);
+				}}
+			>
+				<div className="flex items-center gap-3">
+					<span className="h-px flex-1 bg-hair" />
+					<label htmlFor="room-code" className="text-sm font-bold text-ink-2">
+						Have a room code?
+					</label>
+					<span className="h-px flex-1 bg-hair" />
+				</div>
+				<div className="flex gap-2">
+					<input
+						id="room-code"
+						className={`${field} h-[52px] min-w-0 flex-1 font-mono text-[22px] font-bold tracking-[0.3em] uppercase placeholder:font-bold placeholder:text-ink-3/60`}
+						placeholder="K7QM4R"
+						autoComplete="off"
+						autoCapitalize="characters"
+						spellCheck={false}
+						value={code}
+						maxLength={ROOM_CODE_LENGTH}
+						onChange={(e) =>
+							setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
+						}
+					/>
+					<button
+						type="submit"
+						className={`${btn.secondary} h-[52px] rounded-md px-6 text-base`}
+						disabled={!validCode}
+					>
+						Join
+					</button>
+				</div>
+			</form>
+		</section>
 	);
 }
 
-function JoinRoom() {
-	const navigate = useNavigate();
-	const [code, setCode] = useState("");
-	const valid = code.length === ROOM_CODE_LENGTH;
+function AccountCard() {
+	const session = useSession((s) => s.session);
+	const providers = useAuthProviders();
+	if (!session?.account && providers.length === 0) return null;
 	return (
-		<form
-			className={card}
-			onSubmit={(e) => {
-				e.preventDefault();
-				if (valid) navigate(`/r/${code}`);
-			}}
-		>
-			<label htmlFor="room-code" className="text-lg font-semibold">
-				Join a room
-			</label>
-			<div className="flex gap-2">
-				<input
-					id="room-code"
-					className={`${input} min-w-0 flex-1 font-mono tracking-widest uppercase`}
-					placeholder="ABC234"
-					autoComplete="off"
-					value={code}
-					maxLength={ROOM_CODE_LENGTH}
-					onChange={(e) =>
-						setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
-					}
-				/>
-				<button type="submit" className={button} disabled={!valid}>
-					Join
-				</button>
-			</div>
-		</form>
+		<section className="flex flex-col gap-3 rounded-xl bg-surface p-4 shadow-card sm:p-6 lg:col-start-2 lg:row-start-1">
+			<h2 className="text-lg font-extrabold">Account</h2>
+			{session?.account ? (
+				<>
+					<p className="text-[15px] text-ink-2">
+						Signed in as{" "}
+						<strong className="text-ink">{session.account.email}</strong>. Your
+						games are saved to your account.
+					</p>
+					<SignOutButton className="self-start" />
+				</>
+			) : (
+				<>
+					<p className="text-[15px] text-ink-2">
+						Sign in to keep your history across devices. Playing stays free
+						without it.
+					</p>
+					<SignInButtons providers={providers} />
+				</>
+			)}
+		</section>
 	);
 }
 
 export function Home() {
 	usePageMeta({});
+	useEffect(() => {
+		if (location.hash === "#new-game")
+			document.getElementById("new-game")?.scrollIntoView();
+	}, []);
 	return (
-		<main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
-			<NameForm />
-			<AccountCard />
-			<CreateRoom />
-			<JoinRoom />
-			<History />
+		<main className="mx-auto w-full max-w-[1280px] px-4 pt-6 pb-12 md:px-8 lg:pt-14 xl:px-12">
+			<div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:gap-16">
+				<div className="flex flex-col gap-5 lg:pt-7">
+					<span className="self-start rounded-full bg-accent-soft px-3 py-1.5 text-[13px] font-extrabold text-warn-ink">
+						No sign-up · up to 8 players
+					</span>
+					<h1 className="font-display text-[44px] leading-[0.95] font-extrabold tracking-[-0.04em] text-balance sm:text-6xl lg:text-[84px]">
+						Sudoku, together.
+					</h1>
+					<p className="max-w-[48ch] text-[17px] leading-relaxed text-ink-2 lg:text-xl">
+						Solve one board with friends, or race them on the same puzzle.
+						Create a room, share the link, and they're in.
+					</p>
+					<AppearAs />
+					<div className="mt-4 hidden lg:block">
+						<Steps />
+					</div>
+				</div>
+				<NewGame />
+				<section className="lg:hidden">
+					<h2 className="mb-3 text-lg font-extrabold">How it works</h2>
+					<Steps />
+				</section>
+			</div>
+			<div className="mt-6 grid grid-cols-1 items-start gap-6 lg:mt-14 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+				<History />
+				<AccountCard />
+			</div>
 		</main>
 	);
 }

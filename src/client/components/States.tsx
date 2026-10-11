@@ -1,6 +1,13 @@
 import type { ReactNode } from "react";
 
-type Mood = "question" | "lost" | "error" | "failed" | "locked" | "loading";
+type Mood =
+	| "question"
+	| "lost"
+	| "error"
+	| "failed"
+	| "locked"
+	| "loading"
+	| "daily";
 
 const CENTER: Partial<Record<Mood, { cls: string; mark: string }>> = {
 	question: { cls: "bg-brand text-on-brand", mark: "?" },
@@ -19,6 +26,8 @@ export function TileArt({ mood }: { mood: Mood }) {
 				else if (mood === "lost" && (i === 1 || i === 8))
 					cls = "bg-transparent ring-2 ring-line";
 				else if (mood === "locked") cls = "bg-sunken";
+				else if (mood === "daily")
+					cls = i === 4 ? "bg-accent" : i % 2 ? "bg-brand-soft" : "bg-sunken";
 				else if (mood === "loading") cls = "tile-wave bg-surface shadow-card";
 				return (
 					<span
