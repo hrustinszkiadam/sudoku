@@ -1,7 +1,15 @@
-import { IconAlertTriangle, IconCheck } from "@tabler/icons-react";
+import {
+	IconAlertTriangle,
+	IconCheck,
+	IconDeviceDesktop,
+	IconMoon,
+	IconSun,
+} from "@tabler/icons-react";
 import { type FormEvent, useEffect, useId, useState } from "react";
 import { useSession } from "../store/session";
+import { THEME_PREFS, type ThemePref, useTheme } from "../theme";
 import { SignInButtons, SignOutButton, useAuthProviders } from "./Account";
+import { SegmentedButtons } from "./Segmented";
 import { btn, I } from "./ui";
 
 export const field =
@@ -79,7 +87,33 @@ export function NicknameForm({
 	);
 }
 
-/** Header dropdown: the full nickname, rename, and account. Native popover. */
+const THEME_LABEL = {
+	light: { icon: IconSun, text: "Light" },
+	dark: { icon: IconMoon, text: "Dark" },
+	system: { icon: IconDeviceDesktop, text: "System" },
+} as const satisfies Record<ThemePref, unknown>;
+
+function ThemePicker() {
+	const pref = useTheme((s) => s.pref);
+	const setPref = useTheme((s) => s.setPref);
+	return (
+		<SegmentedButtons
+			label="Theme"
+			options={THEME_PREFS}
+			value={pref}
+			onChange={setPref}
+			compact
+			render={(p) => (
+				<>
+					<I icon={THEME_LABEL[p].icon} size={18} />
+					{THEME_LABEL[p].text}
+				</>
+			)}
+		/>
+	);
+}
+
+/** Header dropdown: the full nickname, rename, theme and account. Native popover. */
 export function ProfileMenu() {
 	const session = useSession((s) => s.session);
 	const providers = useAuthProviders();
@@ -94,7 +128,10 @@ export function ProfileMenu() {
 				{session.name}
 			</p>
 			<NicknameForm />
-			<div className="mt-2 flex flex-col gap-3 border-t border-hair pt-4">
+			<div className="mt-2 border-t border-hair pt-4">
+				<ThemePicker />
+			</div>
+			<div className="mt-4 flex flex-col gap-3 border-t border-hair pt-4">
 				{session.account ? (
 					<>
 						<p className="text-sm text-ink-2">

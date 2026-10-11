@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 /** Segmented control: the selected segment is a raised surface, never just colour. */
 const track = "grid auto-cols-fr grid-flow-col gap-1 rounded-lg bg-sunken p-1";
 const segment =
@@ -54,12 +56,15 @@ export function SegmentedButtons<T extends string>({
 	onChange,
 	label,
 	render = (v) => v,
+	compact = false,
 }: {
 	options: readonly T[];
 	value: T;
 	onChange: (v: T) => void;
 	label: string;
-	render?: (v: T) => string;
+	render?: (v: T) => ReactNode;
+	/** Tighter segments, for narrow menus. */
+	compact?: boolean;
 }) {
 	return (
 		<fieldset className="flex min-w-0 flex-col">
@@ -73,7 +78,7 @@ export function SegmentedButtons<T extends string>({
 						type="button"
 						aria-pressed={value === o}
 						onClick={() => onChange(o)}
-						className={`${segment} px-4 ${value === o ? selected : ""}`}
+						className={`${segment} ${compact ? "gap-1.5 px-2" : "px-4"} ${value === o ? selected : ""}`}
 					>
 						{render(o)}
 					</button>

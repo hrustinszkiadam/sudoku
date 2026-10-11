@@ -104,79 +104,80 @@
 	--duration-slow: 320ms;
 }
 
-@media (prefers-color-scheme: dark) {
-	:root {
-		--color-bg: #090e1b;
-		--color-surface: #111828;
-		--color-sunken: #0d1221;
-		--color-raised: #192033;
-		--color-hair: #252d42;
-		--color-line: #3a4359;
-		--color-ink: #edf0f7;
-		--color-ink-2: #b4bacb;
-		--color-ink-3: #9098ab;
-		--color-brand: #7699fb;
-		--color-brand-strong: #90aeff;
-		--color-brand-soft: #1c294e;
-		--color-brand-softer: #141e38;
-		--color-on-brand: #090e1b;
-		--color-accent: #f9b73f;
-		--color-accent-soft: #3d2a02;
-		--color-danger: #f96f70;
-		--color-danger-soft: #481b1c;
-		--color-success: #55c483;
-		--color-success-soft: #12301e;
-		--color-warn: #3d2a02;
-		--color-warn-line: #6f4f07;
-		--color-warn-ink: #f6d389;
-		--color-toast: #d02b31;
+/* Dark tokens. data-theme is always set before paint (index.html), from the
+   saved choice or the system setting; see theme.ts. */
+:root[data-theme="dark"] {
+	color-scheme: dark;
+	--color-bg: #090e1b;
+	--color-surface: #111828;
+	--color-sunken: #0d1221;
+	--color-raised: #192033;
+	--color-hair: #252d42;
+	--color-line: #3a4359;
+	--color-ink: #edf0f7;
+	--color-ink-2: #b4bacb;
+	--color-ink-3: #9098ab;
+	--color-brand: #7699fb;
+	--color-brand-strong: #90aeff;
+	--color-brand-soft: #1c294e;
+	--color-brand-softer: #141e38;
+	--color-on-brand: #090e1b;
+	--color-accent: #f9b73f;
+	--color-accent-soft: #3d2a02;
+	--color-danger: #f96f70;
+	--color-danger-soft: #481b1c;
+	--color-success: #55c483;
+	--color-success-soft: #12301e;
+	--color-warn: #3d2a02;
+	--color-warn-line: #6f4f07;
+	--color-warn-ink: #f6d389;
+	--color-toast: #d02b31;
 
-		--color-cell: #111828;
-		--color-cell-line: #2e3548;
-		--color-box-line: #8692af;
-		--color-related: #192031;
-		--color-same: #1c294e;
-		--color-selected: #2a3e80;
-		--color-selected-edge: #87a7fe;
-		--color-given: #edf0f7;
-		--color-pen: #a2bcff;
-		--color-note: #b4bacb;
-		--color-note-strong: #edf0f7;
-		--color-flash: #d02b31;
-		--color-focus: #edf0f7;
+	--color-cell: #111828;
+	--color-cell-line: #2e3548;
+	--color-box-line: #8692af;
+	--color-related: #192031;
+	--color-same: #1c294e;
+	--color-selected: #2a3e80;
+	--color-selected-edge: #87a7fe;
+	--color-given: #edf0f7;
+	--color-pen: #a2bcff;
+	--color-note: #b4bacb;
+	--color-note-strong: #edf0f7;
+	--color-flash: #d02b31;
+	--color-focus: #edf0f7;
 
-		--color-p1: #ff8f4b;
-		--color-p1-on: #090e1b;
-		--color-p1-soft: #3c2d2e;
-		--color-p2: #8ed4ff;
-		--color-p2-on: #090e1b;
-		--color-p2-soft: #283a4f;
-		--color-p3: #c4a4fe;
-		--color-p3-on: #090e1b;
-		--color-p3-soft: #31314f;
-		--color-p4: #fe8ebe;
-		--color-p4-on: #090e1b;
-		--color-p4-soft: #3c2d43;
-		--color-p5: #27c0b6;
-		--color-p5-on: #090e1b;
-		--color-p5-soft: #153642;
-		--color-p6: #80ee8b;
-		--color-p6-on: #090e1b;
-		--color-p6-soft: #253f3a;
-		--color-p7: #f7b828;
-		--color-p7-on: #090e1b;
-		--color-p7-soft: #3a3528;
-		--color-p8: #c2e559;
-		--color-p8-on: #090e1b;
-		--color-p8-soft: #313d31;
+	--color-p1: #ff8f4b;
+	--color-p1-on: #090e1b;
+	--color-p1-soft: #3c2d2e;
+	--color-p2: #8ed4ff;
+	--color-p2-on: #090e1b;
+	--color-p2-soft: #283a4f;
+	--color-p3: #c4a4fe;
+	--color-p3-on: #090e1b;
+	--color-p3-soft: #31314f;
+	--color-p4: #fe8ebe;
+	--color-p4-on: #090e1b;
+	--color-p4-soft: #3c2d43;
+	--color-p5: #27c0b6;
+	--color-p5-on: #090e1b;
+	--color-p5-soft: #153642;
+	--color-p6: #80ee8b;
+	--color-p6-on: #090e1b;
+	--color-p6-soft: #253f3a;
+	--color-p7: #f7b828;
+	--color-p7-on: #090e1b;
+	--color-p7-soft: #3a3528;
+	--color-p8: #c2e559;
+	--color-p8-on: #090e1b;
+	--color-p8-soft: #313d31;
 
-		--shadow-card:
-			0 0 0 1px var(--color-hair), inset 0 1px 0 rgb(255 255 255 / 0.04);
-		--shadow-float: 0 16px 40px -8px rgb(0 0 0 / 0.65), 0 0 0 1px #2e3650;
-		--shadow-sheet:
-			0 32px 90px -16px rgb(0 0 0 / 0.8), 0 0 0 1px var(--color-line);
-		--shadow-key: 0 2px 0 0 #05080f;
-	}
+	--shadow-card:
+		0 0 0 1px var(--color-hair), inset 0 1px 0 rgb(255 255 255 / 0.04);
+	--shadow-float: 0 16px 40px -8px rgb(0 0 0 / 0.65), 0 0 0 1px #2e3650;
+	--shadow-sheet:
+		0 32px 90px -16px rgb(0 0 0 / 0.8), 0 0 0 1px var(--color-line);
+	--shadow-key: 0 2px 0 0 #05080f;
 }
 
 /* Board cell layers (see the Cell states board). Fill precedence:

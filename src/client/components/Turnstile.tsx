@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useTheme } from "../theme";
 
 interface TurnstileApi {
 	render(
@@ -8,7 +9,7 @@ interface TurnstileApi {
 			callback: (token: string) => void;
 			"expired-callback": () => void;
 			"error-callback": () => void;
-			theme?: "auto";
+			theme?: "light" | "dark";
 		},
 	): string;
 	reset(id: string): void;
@@ -56,6 +57,7 @@ export function Turnstile({ siteKey, onToken, resetKey }: TurnstileProps) {
 	const widget = useRef<string | null>(null);
 	const onTokenRef = useRef(onToken);
 	onTokenRef.current = onToken;
+	const theme = useTheme((s) => s.theme);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -64,7 +66,7 @@ export function Turnstile({ siteKey, onToken, resetKey }: TurnstileProps) {
 				if (cancelled || !el.current) return;
 				widget.current = ts.render(el.current, {
 					sitekey: siteKey,
-					theme: "auto",
+					theme,
 					callback: (t) => onTokenRef.current(t),
 					"expired-callback": () => onTokenRef.current(null),
 					"error-callback": () => onTokenRef.current(null),
@@ -76,7 +78,7 @@ export function Turnstile({ siteKey, onToken, resetKey }: TurnstileProps) {
 			if (widget.current) window.turnstile?.remove(widget.current);
 			widget.current = null;
 		};
-	}, [siteKey]);
+	}, [siteKey, theme]);
 
 	useEffect(() => {
 		if (resetKey > 0 && widget.current) {

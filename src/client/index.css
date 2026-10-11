@@ -6,7 +6,7 @@
 
 @layer base {
 	html {
-		color-scheme: light dark;
+		color-scheme: light;
 		-webkit-tap-highlight-color: transparent;
 	}
 	body {
@@ -35,6 +35,9 @@
 		cursor: pointer;
 	}
 }
+
+/* dark: follows the chosen theme (data-theme), not only the system setting. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* Hover effects only where a precise pointer can hover (not on touch). */
 @custom-variant can-hover (@media (hover: hover) and (pointer: fine));

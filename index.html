@@ -18,8 +18,25 @@
 		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 		<meta name="format-detection" content="telephone=no" />
 		<meta name="color-scheme" content="light dark" />
-		<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#FCFDFF" media="(prefers-color-scheme: light)" />
 		<meta name="theme-color" content="#111828" media="(prefers-color-scheme: dark)" />
+		<script>
+			// Theme before first paint: the saved choice, else the system (see src/client/theme.ts).
+			(() => {
+				var pref;
+				try {
+					pref = localStorage.getItem("sudoku:theme");
+				} catch {}
+				var dark =
+					pref === "dark" ||
+					(pref !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+				var theme = dark ? "dark" : "light";
+				document.documentElement.dataset.theme = theme;
+				document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
+					m.content = dark ? "#111828" : "#FCFDFF";
+				});
+			})();
+		</script>
 		<link rel="manifest" href="/manifest.webmanifest" />
 		<link rel="icon" href="/favicon.ico" sizes="48x48" />
 		<link rel="icon" href="/icon.svg" type="image/svg+xml" />
