@@ -11,3 +11,4 @@ playwright-report
 .DS_Store
 seeds/*.sql
 design
+brag-output
