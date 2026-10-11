@@ -1,4 +1,5 @@
 import { IconCheck, IconFlag, IconPlayerStop } from "@tabler/icons-react";
+import { useState } from "react";
 import type { Player } from "../../types";
 import { formatMs } from "../Timer";
 import { btn, I, initialOf, PencilTile, pencilStyle } from "../ui";
@@ -175,17 +176,49 @@ export function RaceLanes({
 					);
 				})}
 			</ul>
-			{onEnd && (
+			{onEnd && <EndRace onEnd={onEnd} />}
+		</section>
+	);
+}
+
+/** Ending the race is for everyone, so it asks once before it happens. */
+function EndRace({ onEnd }: { onEnd: () => void }) {
+	const [asking, setAsking] = useState(false);
+	const base = "mt-2.5 h-11 rounded-md text-[15px] font-extrabold";
+	if (!asking) {
+		return (
+			<button
+				type="button"
+				onClick={() => setAsking(true)}
+				className={`${btn.danger} ${base} border-[1.5px]`}
+			>
+				<I icon={IconPlayerStop} />
+				End race now
+			</button>
+		);
+	}
+	return (
+		<fieldset className="mt-2.5 flex flex-col gap-2">
+			<legend className="mb-2 text-sm font-bold">
+				End the race for everyone? Unfinished players get no rank.
+			</legend>
+			<div className="grid grid-cols-2 gap-2">
+				<button
+					type="button"
+					onClick={() => setAsking(false)}
+					className={`${btn.secondary} ${base}`}
+				>
+					Keep racing
+				</button>
 				<button
 					type="button"
 					onClick={onEnd}
-					className={`${btn.danger} mt-2.5 h-11 rounded-md border-[1.5px] text-[15px] font-extrabold`}
+					className={`${base} inline-flex items-center justify-center bg-danger text-on-brand hover:opacity-90 active:translate-y-px`}
 				>
-					<I icon={IconPlayerStop} />
-					End race now
+					End race
 				</button>
-			)}
-		</section>
+			</div>
+		</fieldset>
 	);
 }
 

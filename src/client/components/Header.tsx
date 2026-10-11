@@ -52,7 +52,10 @@ export function Header() {
 						className="flex shrink-0 items-center gap-2 rounded-md md:gap-2.5"
 					>
 						<Logo />
-						<span className="font-display text-xl font-extrabold tracking-[-0.03em] md:text-[23px]">
+						<span
+							translate="no"
+							className="font-display text-xl font-extrabold tracking-[-0.03em] md:text-[23px]"
+						>
 							Sudoku
 						</span>
 					</Link>

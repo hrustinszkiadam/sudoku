@@ -66,7 +66,10 @@ export function RoomBar({
 						title="Copy the room code"
 						className="group flex h-10 items-center gap-1.5 rounded-md border border-line bg-surface pr-2.5 pl-3 hover:bg-sunken md:-ml-1 md:h-auto md:gap-2 md:border-0 md:bg-transparent md:px-1 md:hover:bg-transparent"
 					>
-						<span className="font-mono text-[17px] leading-[1.1] font-bold tracking-[0.1em] md:text-[28px] md:tracking-[0.12em]">
+						<span
+							translate="no"
+							className="font-mono text-[17px] leading-[1.1] font-bold tracking-[0.1em] md:text-[28px] md:tracking-[0.12em]"
+						>
 							{code}
 						</span>
 						<I

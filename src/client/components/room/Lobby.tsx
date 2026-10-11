@@ -67,6 +67,7 @@ export function Lobby({
 				<p
 					role="img"
 					aria-label={`Room code ${code.split("").join(" ")}`}
+					translate="no"
 					className="flex gap-[5px] lg:gap-2"
 				>
 					{code.split("").map((ch, i) => (

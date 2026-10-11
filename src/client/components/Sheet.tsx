@@ -43,7 +43,7 @@ export function Sheet({
 			onKeyDown={() => {}}
 			className={`sheet m-0 mt-auto w-full max-w-none overflow-visible bg-transparent p-0 text-ink backdrop:bg-[rgb(21_29_51/0.4)] sm:m-auto sm:w-[min(440px,calc(100vw-32px))] dark:backdrop:bg-black/60 ${className}`}
 		>
-			<div className="flex max-h-[85dvh] flex-col gap-3.5 overflow-y-auto rounded-t-xl bg-surface px-5 pt-2.5 pb-7 shadow-sheet sm:rounded-xl sm:px-7 sm:pt-6">
+			<div className="flex max-h-[85dvh] flex-col gap-3.5 overflow-y-auto overscroll-contain rounded-t-xl bg-surface px-5 pt-2.5 pb-[calc(28px+env(safe-area-inset-bottom))] shadow-sheet sm:rounded-xl sm:px-7 sm:pt-6">
 				<span
 					aria-hidden
 					className="h-[5px] w-10 shrink-0 self-center rounded-full bg-line sm:hidden"

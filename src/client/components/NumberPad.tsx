@@ -41,8 +41,8 @@ const NOTE_SPOT = [
 const key =
 	"relative flex h-[52px] items-center justify-center rounded-md border text-2xl leading-none font-bold transition-[translate,box-shadow,background-color] duration-(--duration-instant) lg:h-16 lg:text-[28px]";
 const keyPress = "shadow-key active:translate-y-0.5 active:shadow-none";
-const keyOn = `border-line bg-raised text-ink active:bg-sunken ${keyPress}`;
-const keyNote = `border-line bg-brand-softer text-brand-strong ${keyPress}`;
+const keyOn = `border-line bg-raised text-ink can-hover:hover:bg-sunken active:bg-sunken ${keyPress}`;
+const keyNote = `border-line bg-brand-softer text-brand-strong can-hover:hover:bg-brand-soft ${keyPress}`;
 const keyOff =
 	"cursor-not-allowed border-hair bg-sunken text-ink-3 shadow-none";
 const tool =

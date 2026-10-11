@@ -181,7 +181,7 @@ function NewGame() {
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [code, setCode] = useState("");
-	const validCode = code.length === ROOM_CODE_LENGTH;
+	const [codeError, setCodeError] = useState(false);
 
 	useEffect(() => {
 		api
@@ -204,7 +204,9 @@ function NewGame() {
 			navigate(`/r/${code}`);
 		} catch (err) {
 			setError(
-				err instanceof ApiError ? err.message : "Could not create the room",
+				err instanceof ApiError
+					? err.message
+					: "Couldn't create the room. Check your connection and try again.",
 			);
 			setResetKey((k) => k + 1);
 		} finally {
@@ -277,7 +279,11 @@ function NewGame() {
 				className="flex flex-col gap-3"
 				onSubmit={(e) => {
 					e.preventDefault();
-					if (validCode) navigate(`/r/${code}`);
+					if (code.length === ROOM_CODE_LENGTH) navigate(`/r/${code}`);
+					else {
+						setCodeError(true);
+						document.getElementById("room-code")?.focus();
+					}
 				}}
 			>
 				<div className="flex items-center gap-3">
@@ -290,6 +296,10 @@ function NewGame() {
 				<div className="flex gap-2">
 					<input
 						id="room-code"
+						name="code"
+						translate="no"
+						aria-invalid={codeError}
+						aria-describedby={codeError ? "room-code-error" : undefined}
 						className={`${field} h-[52px] min-w-0 flex-1 font-mono text-[22px] font-bold tracking-[0.3em] uppercase placeholder:font-bold placeholder:text-ink-3/60`}
 						placeholder="K7QM4R"
 						autoComplete="off"
@@ -297,18 +307,28 @@ function NewGame() {
 						spellCheck={false}
 						value={code}
 						maxLength={ROOM_CODE_LENGTH}
-						onChange={(e) =>
-							setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))
-						}
+						onChange={(e) => {
+							setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""));
+							setCodeError(false);
+						}}
 					/>
 					<button
 						type="submit"
 						className={`${btn.secondary} h-[52px] rounded-md px-6 text-base`}
-						disabled={!validCode}
 					>
 						Join
 					</button>
 				</div>
+				{codeError && (
+					<p
+						id="room-code-error"
+						role="alert"
+						className="flex items-center gap-1.5 text-sm font-bold text-danger"
+					>
+						<I icon={IconAlertTriangle} size={16} />
+						Room codes have {ROOM_CODE_LENGTH} letters and digits.
+					</p>
+				)}
 			</form>
 		</section>
 	);

@@ -11,6 +11,20 @@
 	}
 	body {
 		@apply min-h-dvh bg-bg font-sans text-ink antialiased;
+		/* viewport-fit=cover: keep content clear of notches in landscape. */
+		padding-left: env(safe-area-inset-left);
+		padding-right: env(safe-area-inset-right);
+	}
+	/* No double-tap zoom delay on the board and pad. */
+	a,
+	button,
+	input,
+	label {
+		touch-action: manipulation;
+	}
+	h1,
+	h2 {
+		text-wrap: balance;
 	}
 	:focus-visible {
 		outline: 2px solid var(--color-focus);

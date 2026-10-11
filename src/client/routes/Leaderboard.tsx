@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 import { DIFFICULTIES, MODES } from "../../shared/constants";
 import { LeaderboardTable } from "../components/LeaderboardTable";
 import { SegmentedButtons } from "../components/Segmented";
@@ -16,8 +17,28 @@ export function Leaderboard() {
 		path: "/leaderboard",
 	});
 	const session = useSession((s) => s.session);
-	const [difficulty, setDifficulty] = useState<Difficulty>("easy");
-	const [mode, setMode] = useState<Mode>("coop");
+	// Filters live in the URL so a view can be shared and survives reloads.
+	const [params, setParams] = useSearchParams();
+	const pick = <T extends string>(
+		key: string,
+		options: readonly T[],
+		fallback: T,
+	): T => {
+		const v = params.get(key);
+		return options.includes(v as T) ? (v as T) : fallback;
+	};
+	const mode = pick<Mode>("mode", MODES, "coop");
+	const difficulty = pick<Difficulty>("difficulty", DIFFICULTIES, "easy");
+	const set = (key: string, value: string) =>
+		setParams(
+			(p) => {
+				p.set(key, value);
+				return p;
+			},
+			{ replace: true },
+		);
+	const setMode = (m: Mode) => set("mode", m);
+	const setDifficulty = (d: Difficulty) => set("difficulty", d);
 	const [rows, setRows] = useState<LeaderboardRow[] | null>(null);
 
 	useEffect(() => {

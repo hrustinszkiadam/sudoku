@@ -76,7 +76,10 @@ export function InviteSheet({
 			<div className="flex items-center justify-between gap-3 rounded-lg bg-sunken px-4 py-3.5">
 				<div className="flex min-w-0 flex-col gap-0.5">
 					<Overline>Room code</Overline>
-					<span className="font-mono text-[30px] leading-[1.1] font-bold tracking-[0.14em]">
+					<span
+						translate="no"
+						className="font-mono text-[30px] leading-[1.1] font-bold tracking-[0.14em]"
+					>
 						{code}
 					</span>
 				</div>

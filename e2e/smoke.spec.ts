@@ -38,4 +38,11 @@ test("leaderboard filters by mode and difficulty", async ({ page }) => {
 			.getByText("No results yet")
 			.or(page.getByRole("columnheader", { name: "Best" })),
 	).toBeVisible();
+	// The filters live in the URL, so the view survives a reload.
+	await expect(page).toHaveURL(/mode=race/);
+	await page.reload();
+	await expect(page.getByRole("button", { name: "Race" })).toHaveAttribute(
+		"aria-pressed",
+		"true",
+	);
 });

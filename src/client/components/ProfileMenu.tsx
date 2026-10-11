@@ -42,6 +42,7 @@ export function NicknameForm({
 			<div className="flex gap-2">
 				<input
 					id={id}
+					name="nickname"
 					// biome-ignore lint/a11y/noAutofocus: opened on purpose by the user
 					autoFocus={autoFocus}
 					className={`${field} flex-1`}

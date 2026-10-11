@@ -329,6 +329,11 @@ function RoomView({ code, store }: { code: string; store: RoomStore }) {
 		<>
 			<ConnectionBanner status={s.conn} />
 			<main className="mx-auto w-full max-w-[1280px] px-4 pb-7 md:px-8 lg:pb-10 xl:px-12">
+				{!lobby && (
+					<h1 className="sr-only">
+						Room {code}, {race ? "race" : "co-op"}
+					</h1>
+				)}
 				{bar}
 				{lobby ? (
 					<div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,848px)_minmax(0,296px)] lg:gap-10">
