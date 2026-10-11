@@ -222,6 +222,9 @@
 		transform-origin: bottom;
 		animation: podium-rise var(--duration-slow) var(--ease-out) both;
 	}
+	.presence-in {
+		animation: fade-in var(--duration-fast) var(--ease-out);
+	}
 	.cell-wave {
 		animation: cell-wave 600ms var(--ease-standard) both;
 	}

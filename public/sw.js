@@ -1,6 +1,6 @@
 // Service worker: caches the app shell so the PWA opens offline-capable.
 // The API (/api/*) and WebSockets are never cached or intercepted.
-const CACHE = "sudoku-shell-v1";
+const CACHE = "sudoku-shell-v2";
 const SHELL = ["/", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (event) => {

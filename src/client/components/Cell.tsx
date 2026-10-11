@@ -206,7 +206,7 @@ export const Cell = memo(function Cell(props: CellProps) {
 				<>
 					<span
 						aria-hidden
-						className={`cell-ring ${corner}`}
+						className={`cell-ring presence-in ${corner}`}
 						style={
 							{
 								"--ring": `var(--color-p${others[0].pencil})`,

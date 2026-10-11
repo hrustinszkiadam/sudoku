@@ -165,6 +165,16 @@ function RoomView({ code, store }: { code: string; store: RoomStore }) {
 	const msLeft = startsAt === null ? 0 : startsAt - now;
 	const showCountdown = startsAt !== null && msLeft > -GO_MS;
 	const replaced = s.conn === "replaced";
+	// One tick per countdown number, a brighter tone on Go.
+	const beat = showCountdown
+		? msLeft <= 0
+			? 0
+			: Math.ceil(msLeft / 1000)
+		: -1;
+	useEffect(() => {
+		if (beat > 0) play("tick");
+		else if (beat === 0) play("go");
+	}, [beat]);
 	const canPlay =
 		s.loaded && s.status === "playing" && msLeft <= 0 && !replaced;
 

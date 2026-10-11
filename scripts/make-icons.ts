@@ -1,86 +1,53 @@
 /**
- * Writes the PWA icons to public/: a sudoku grid on a blue rounded square.
- * Dependency-free PNG encoding (node:zlib). Run with `tsx scripts/make-icons.ts`.
+ * Writes the brand mark and PWA icons to public/: nine tiles on Ink Blue, a
+ * marigold centre and a friend's ring in the top-right corner. Rendered from
+ * SVG with Playwright's Chromium. Run with `tsx scripts/make-icons.ts`.
  */
 import { writeFileSync } from "node:fs";
-import { deflateSync } from "node:zlib";
+import { chromium } from "@playwright/test";
 
-const BG = [2, 132, 199]; // sky-600
-const FG = [255, 255, 255];
-const ACCENT = [251, 191, 36]; // amber-400
+const INK_BLUE = "#3453D3";
+const MARIGOLD = "#F7AD30";
+const RING = "#FF8F4B";
 
-function crc32(buf: Buffer): number {
-	let c = ~0;
-	for (const b of buf) {
-		c ^= b;
-		for (let k = 0; k < 8; k++) c = c & 1 ? (c >>> 1) ^ 0xedb88320 : c >>> 1;
-	}
-	return ~c >>> 0;
+interface MarkOptions {
+	/** Full-bleed square (maskable / Apple touch) instead of a rounded tile. */
+	bleed?: boolean;
+	/** Keep the tiles inside the 80 % safe circle of a maskable icon. */
+	safe?: boolean;
+	/** Favicon sizes: drop the ring and fatten the tiles so it still reads. */
+	small?: boolean;
+	title?: string;
 }
 
-function chunk(type: string, data: Buffer): Buffer {
-	const len = Buffer.alloc(4);
-	len.writeUInt32BE(data.length);
-	const body = Buffer.concat([Buffer.from(type, "ascii"), data]);
-	const crc = Buffer.alloc(4);
-	crc.writeUInt32BE(crc32(body));
-	return Buffer.concat([len, body, crc]);
-}
-
-/** `pixel(x, y)` returns RGBA in 0-255. */
-function png(size: number, pixel: (x: number, y: number) => number[]): Buffer {
-	const raw = Buffer.alloc(size * (size * 4 + 1));
-	for (let y = 0; y < size; y++) {
-		raw[y * (size * 4 + 1)] = 0;
-		for (let x = 0; x < size; x++) {
-			const [r, g, b, a] = pixel(x, y);
-			raw.set([r, g, b, a], y * (size * 4 + 1) + 1 + x * 4);
+/** The mark on a 32-unit grid: tiles 6 with 1.5 gaps, radius 7.5. */
+function markSvg({ bleed, safe, small, title }: MarkOptions = {}): string {
+	const tile = small ? 7.4 : 6;
+	const gap = small ? 1.3 : 1.5;
+	const block = 3 * tile + 2 * gap;
+	const scale = safe ? (0.8 * 32) / Math.SQRT2 / block : 1;
+	const start = (32 - block * scale) / 2;
+	const rects: string[] = [];
+	for (let r = 0; r < 3; r++) {
+		for (let c = 0; c < 3; c++) {
+			const x = start + c * (tile + gap) * scale;
+			const y = start + r * (tile + gap) * scale;
+			const centre = r === 1 && c === 1;
+			const ring = !small && r === 0 && c === 2;
+			rects.push(
+				`<rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${(tile * scale).toFixed(2)}" height="${(tile * scale).toFixed(2)}" rx="${(1.6 * scale).toFixed(2)}" fill="${centre ? MARIGOLD : "#FFFFFF"}"${ring ? ` stroke="${RING}" stroke-width="${(1.6 * scale).toFixed(2)}"` : ""}/>`,
+			);
 		}
 	}
-	const ihdr = Buffer.alloc(13);
-	ihdr.writeUInt32BE(size, 0);
-	ihdr.writeUInt32BE(size, 4);
-	ihdr.set([8, 6, 0, 0, 0], 8);
-	return Buffer.concat([
-		Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-		chunk("IHDR", ihdr),
-		chunk("IDAT", deflateSync(raw)),
-		chunk("IEND", Buffer.alloc(0)),
-	]);
-}
-
-/** Grid icon; `maskable` keeps the art inside the 80% safe zone on a full bleed. */
-function icon(size: number, maskable: boolean): Buffer {
-	const radius = maskable ? 0 : size * 0.18;
-	const inset = size * (maskable ? 0.2 : 0.16);
-	const grid = size - 2 * inset;
-	const cell = grid / 9;
-	const thin = Math.max(1, size / 160);
-	const thick = Math.max(2, size / 48);
-	return png(size, (x, y) => {
-		// Rounded-square mask.
-		const cx = Math.min(Math.max(x, radius), size - 1 - radius);
-		const cy = Math.min(Math.max(y, radius), size - 1 - radius);
-		if (Math.hypot(x - cx, y - cy) > radius) return [0, 0, 0, 0];
-
-		const gx = x - inset;
-		const gy = y - inset;
-		if (gx < 0 || gy < 0 || gx > grid || gy > grid) return [...BG, 255];
-		const col = Math.floor(gx / cell);
-		const row = Math.floor(gy / cell);
-		const onLine = (v: number) => {
-			const i = Math.round(v / cell);
-			const d = Math.abs(v - i * cell);
-			return d <= (i % 3 === 0 ? thick : thin) / 2;
-		};
-		if (onLine(gx) || onLine(gy)) return [...FG, 255];
-		// A highlighted cell and its box hint at play.
-		if (row === 4 && col === 4) return [...ACCENT, 255];
-		if (Math.floor(row / 3) === 1 && Math.floor(col / 3) === 1) {
-			return [...FG.map((c, i) => Math.round(c * 0.25 + BG[i] * 0.75)), 255];
-		}
-		return [...BG, 255];
-	});
+	const attrs = title
+		? ' role="img" aria-labelledby="t"'
+		: ' aria-hidden="true"';
+	const titleEl = title ? `\n\t<title id="t">${title}</title>` : "";
+	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"${attrs}>${titleEl}
+	<rect width="32" height="32"${bleed ? "" : ' rx="7.5"'} fill="${INK_BLUE}"/>
+	${rects.join("\n\t")}
+</svg>
+`;
 }
 
 /** ICO container holding PNG images (supported by every current browser). */
@@ -105,12 +72,32 @@ function ico(images: { size: number; data: Buffer }[]): Buffer {
 	return Buffer.concat([header, ...entries, ...images.map((i) => i.data)]);
 }
 
+const browser = await chromium.launch();
+const page = await browser.newPage();
+
+async function png(size: number, opts: MarkOptions): Promise<Buffer> {
+	await page.setViewportSize({ width: size, height: size });
+	await page.setContent(
+		`<style>*{margin:0}svg{display:block;width:${size}px;height:${size}px}</style>${markSvg(opts)}`,
+	);
+	return page.screenshot({ omitBackground: true });
+}
+
+writeFileSync("public/icon.svg", markSvg({ title: "Multiplayer Sudoku" }));
 writeFileSync(
 	"public/favicon.ico",
-	ico([16, 32, 48].map((size) => ({ size, data: icon(size, false) }))),
+	ico([
+		{ size: 16, data: await png(16, { small: true }) },
+		{ size: 32, data: await png(32, {}) },
+		{ size: 48, data: await png(48, {}) },
+	]),
 );
-writeFileSync("public/icon-192.png", icon(192, false));
-writeFileSync("public/icon-512.png", icon(512, false));
-writeFileSync("public/icon-maskable-512.png", icon(512, true));
-writeFileSync("public/apple-touch-icon.png", icon(180, true));
+writeFileSync("public/icon-192.png", await png(192, {}));
+writeFileSync("public/icon-512.png", await png(512, {}));
+writeFileSync(
+	"public/icon-maskable-512.png",
+	await png(512, { bleed: true, safe: true }),
+);
+writeFileSync("public/apple-touch-icon.png", await png(180, { bleed: true }));
+await browser.close();
 console.log("Wrote icons to public/");

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type SoundKind = "place" | "mistake" | "win";
+export type SoundKind = "place" | "mistake" | "win" | "tick" | "go";
 
 const KEY = "sudoku:sound";
 
@@ -11,6 +11,8 @@ const TONES: Record<SoundKind, [number, number][]> = {
 		[220, 0.09],
 		[180, 0.12],
 	],
+	tick: [[440, 0.07]],
+	go: [[880, 0.16]],
 	win: [
 		[523, 0.1],
 		[659, 0.1],
