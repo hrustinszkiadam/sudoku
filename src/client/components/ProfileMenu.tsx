@@ -6,6 +6,7 @@ import {
 	IconSun,
 } from "@tabler/icons-react";
 import { type FormEvent, useEffect, useId, useState } from "react";
+import { Link } from "react-router";
 import { useSession } from "../store/session";
 import { THEME_PREFS, type ThemePref, useTheme } from "../theme";
 import { SignInButtons, SignOutButton, useAuthProviders } from "./Account";
@@ -151,6 +152,13 @@ export function ProfileMenu() {
 					<p className="text-sm text-ink-2">Playing as a guest.</p>
 				)}
 			</div>
+			<Link
+				to="/adatkezeles"
+				onClick={() => document.getElementById("profile-menu")?.hidePopover()}
+				className="mt-4 inline-block text-[13px] font-bold text-ink-3 underline underline-offset-2 hover:text-ink"
+			>
+				Privacy policy (HU)
+			</Link>
 		</div>
 	);
 }

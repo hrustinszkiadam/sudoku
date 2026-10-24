@@ -10,6 +10,16 @@ export default defineConfig({
 	use: {
 		baseURL: `http://localhost:${PORT}`,
 		trace: "retain-on-failure",
+		// Start with the cookie notice dismissed; privacy.spec.ts resets this.
+		storageState: {
+			cookies: [],
+			origins: [
+				{
+					origin: `http://localhost:${PORT}`,
+					localStorage: [{ name: "sudoku:cookie-notice", value: "1" }],
+				},
+			],
+		},
 	},
 	projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
 	webServer: {
