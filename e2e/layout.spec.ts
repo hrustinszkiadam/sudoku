@@ -7,13 +7,7 @@ test.use({
 	isMobile: true,
 });
 
-for (const path of [
-	"/",
-	"/dev/board",
-	"/daily",
-	"/leaderboard",
-	"/adatkezeles",
-]) {
+for (const path of ["/", "/dev/board", "/daily", "/leaderboard", "/privacy"]) {
 	test(`${path} fits a 360 px screen without horizontal scroll`, async ({
 		page,
 	}) => {

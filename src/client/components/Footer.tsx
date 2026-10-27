@@ -8,10 +8,10 @@ export function Footer() {
 		<footer className="mx-auto max-w-[1280px] px-4 pt-4 pb-8 text-center text-[13px] text-ink-3 md:px-12">
 			© Hrustinszki Ádám ·{" "}
 			<Link
-				to="/adatkezeles"
+				to="/privacy"
 				className="font-bold underline underline-offset-2 hover:text-ink"
 			>
-				Adatkezelési tájékoztató
+				Privacy policy
 			</Link>
 		</footer>
 	);

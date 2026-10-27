@@ -16,20 +16,22 @@ test("the cookie notice shows once and links to the privacy policy", async ({
 
 	await page
 		.getByRole("contentinfo")
-		.getByRole("link", { name: "Adatkezelési tájékoztató" })
+		.getByRole("link", { name: "Privacy policy" })
 		.click();
-	await expect(page).toHaveURL(/\/adatkezeles$/);
+	await expect(page).toHaveURL(/\/privacy$/);
 });
 
-test("the privacy policy is a Hungarian, indexable page", async ({ page }) => {
+test("the privacy policy is indexable and the old Hungarian URL redirects", async ({
+	page,
+}) => {
 	await page.goto("/adatkezeles");
-	await expect(page).toHaveTitle("Adatkezelési tájékoztató · Sudoku");
-	await expect(page.locator("main")).toHaveAttribute("lang", "hu");
+	await expect(page).toHaveURL(/\/privacy$/);
+	await expect(page).toHaveTitle("Privacy policy · Sudoku");
 	await expect(
-		page.getByRole("heading", { level: 1, name: "Adatkezelési tájékoztató" }),
+		page.getByRole("heading", { level: 1, name: "Privacy policy" }),
 	).toBeVisible();
 	expect(await page.locator("link[rel=canonical]").getAttribute("href")).toBe(
-		"https://sudoku.hrustinszki.com/adatkezeles",
+		"https://sudoku.hrustinszki.com/privacy",
 	);
 	// The notice never covers the page it points to.
 	await expect(

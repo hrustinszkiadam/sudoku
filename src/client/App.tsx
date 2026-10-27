@@ -1,15 +1,15 @@
 import { lazy, Suspense, useEffect } from "react";
-import { BrowserRouter, Route, Routes } from "react-router";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import { CookieNotice } from "./components/CookieNotice";
 import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
 import { Loading, StatePanel } from "./components/States";
 import { btn } from "./components/ui";
-import { Adatkezeles } from "./routes/Adatkezeles";
 import { Daily } from "./routes/Daily";
 import { Home } from "./routes/Home";
 import { Leaderboard } from "./routes/Leaderboard";
 import { NotFound } from "./routes/NotFound";
+import { Privacy } from "./routes/Privacy";
 import { Room } from "./routes/Room";
 import { useSession } from "./store/session";
 
@@ -59,7 +59,11 @@ export function App() {
 							<Route path="/r/:code" element={<Room />} />
 							<Route path="/daily" element={<Daily />} />
 							<Route path="/leaderboard" element={<Leaderboard />} />
-							<Route path="/adatkezeles" element={<Adatkezeles />} />
+							<Route path="/privacy" element={<Privacy />} />
+							<Route
+								path="/adatkezeles"
+								element={<Navigate to="/privacy" replace />}
+							/>
 							{DevBoard && <Route path="/dev/board" element={<DevBoard />} />}
 							<Route path="*" element={<NotFound />} />
 						</Routes>

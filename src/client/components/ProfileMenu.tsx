@@ -153,11 +153,11 @@ export function ProfileMenu() {
 				)}
 			</div>
 			<Link
-				to="/adatkezeles"
+				to="/privacy"
 				onClick={() => document.getElementById("profile-menu")?.hidePopover()}
 				className="mt-4 inline-block text-[13px] font-bold text-ink-3 underline underline-offset-2 hover:text-ink"
 			>
-				Privacy policy (HU)
+				Privacy policy
 			</Link>
 		</div>
 	);

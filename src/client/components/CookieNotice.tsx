@@ -19,7 +19,7 @@ function seen(): boolean {
 export function CookieNotice() {
 	const [show, setShow] = useState(() => !seen());
 	const { pathname } = useLocation();
-	if (!show || pathname === "/adatkezeles") return null;
+	if (!show || pathname === "/privacy") return null;
 	const dismiss = () => {
 		try {
 			localStorage.setItem(KEY, "1");
@@ -42,10 +42,10 @@ export function CookieNotice() {
 			</p>
 			<div className="mt-3 flex items-center justify-between gap-3">
 				<Link
-					to="/adatkezeles"
+					to="/privacy"
 					className="text-sm font-extrabold text-brand underline underline-offset-2"
 				>
-					Privacy policy (HU)
+					Privacy policy
 				</Link>
 				<button
 					type="button"
